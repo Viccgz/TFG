@@ -1,0 +1,16 @@
+{
+    "OPEN_AI_KEY_SECRET": "", 
+    "BEARER_TOKEN": "", 
+    "ACCESS_TOKEN_SECRET": "", 
+    "ACCESS_TOKEN": "", 
+    "API_KEY_SECRET": "", 
+    "API_KEY": "", 
+    "API_ID": "", 
+    "API_HASH": "", 
+    "SESSION_NAME": "TelegramSession",
+    "llama_api_key": "", 
+    "genai_api_key": "", 
+    "deepseek_api_key":"", 
+    "claude_api_key": ""
+  }
+
