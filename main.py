@@ -10,8 +10,8 @@ import metrics
 n_items_used = 1
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, source):
-    MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se ejecuta desde otro equipo
-                                                  # EN: Change to the PC's which has the database IP if running from another computer
+    MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
+                                                  # EN: Change to the PC's which has the database IP if saving in another computer
     DATABASE_NAME = llm_chosen + 'Results_EmotionalAnalysis'
     COLLECTION_NAME = source + '_results'
     client = MongoClient(MONGO_URI)
@@ -55,8 +55,6 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, source):
                 sentiment, certainty, justification, n_items_used = llm_call.send_to_chatgpt(message, media, justification, n_media, n_items_used )
             elif llm_chosen.upper() == 'GEMINI':
                 sentiment, certainty, justification, n_items_used = llm_call.send_to_gemini(message, media, justification, n_media, n_items_used )
-            elif llm_chosen.upper() == 'CLAUDE':
-                sentiment, certainty, justification, n_items_used = llm_call.send_to_claude(message, media, justification, n_media, n_items_used )
             elif llm_chosen.upper() == 'DEEPSEEK':
                 sentiment, certainty, justification, n_items_used = llm_call.send_to_deepseek(message, media, justification, n_media, n_items_used )
             # ES: Actualizar el dataframe creando una nueva columna
@@ -114,13 +112,13 @@ if __name__ == "__main__":
         else:
             stringJustification = input("Incorrect format, would you like to get the sentiment classified? (Y/N): ")
     
-    llm_chosen = input("Which LLM model would you like to use? (ChatGPT/Gemini/Claude/Deepseek): ")
+    llm_chosen = input("Which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
     valid_format = False
     while not valid_format:
-        if llm_chosen.upper() == 'CHATGPT' or llm_chosen.upper() == 'GEMINI' or llm_chosen.upper() == 'CLAUDE' or llm_chosen.upper() == 'DEEPSEEK':
+        if llm_chosen.upper() == 'CHATGPT' or llm_chosen.upper() == 'GEMINI' or llm_chosen.upper() == 'DEEPSEEK':
             valid_format = True
         else:
-            llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Claude/Deepseek): ")
+            llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
 
     input_csv = csv_filename
     output_csv = llm_chosen+"_results_"+source+"_emontional_analysis_results.csv"
