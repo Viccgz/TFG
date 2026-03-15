@@ -1,0 +1,116 @@
+import pandas as pd
+import ast
+
+GO_EMOTIONS_LABELS = [
+    "admiration",
+    "amusement",
+    "anger",
+    "annoyance",
+    "approval",
+    "caring",
+    "confusion",
+    "curiosity",
+    "desire",
+    "disappointment",
+    "disapproval",
+    "disgust",
+    "embarrassment",
+    "excitement",
+    "fear",
+    "gratitude",
+    "grief",
+    "joy",
+    "love",
+    "nervousness",
+    "optimism",
+    "pride",
+    "realization",
+    "relief",
+    "remorse",
+    "sadness",
+    "surprise",
+    "neutral"
+]
+
+EMOTION_MAP = {
+    "admiration": "joy",
+    "amusement": "joy",
+    "approval": "joy",
+    "excitement": "joy",
+    "gratitude": "joy",
+    "pride": "joy",
+    "joy": "joy",
+    "optimism": "joy",
+    "relief": "joy",
+
+    "love": "love",
+    "caring": "love",
+
+    "anger": "anger",
+    "annoyance": "anger",
+    "disapproval": "anger",
+
+    "fear": "fear",
+    "nervousness": "fear",
+
+    "sadness": "sadness",
+    "disappointment": "sadness",
+    "grief": "sadness",
+    "remorse": "sadness",
+    "embarrassment": "sadness",
+    "shame": "sadness",
+    "guilt": "sadness",
+
+    "disgust": "disgust",
+
+    "surprise": "surprise",
+    "realization": "surprise",
+
+    "confusion": "neutral",
+    "curiosity": "neutral",
+    "neutral": "neutral",
+    "desire": "neutral"
+}
+
+def normalize_go_emotions_labels(labels):
+    emotions = []
+
+    for label in labels:
+        ids = ast.literal_eval(label)
+        emotion = GO_EMOTIONS_LABELS[ids[0]]
+        mapped_emotion = EMOTION_MAP.get(emotion, "neutral")
+        emotions.append(mapped_emotion)
+
+    return pd.DataFrame({"text": labels.index, "emotion": emotions})
+
+def normalize_isear_labels(df):
+    return pd.DataFrame({
+        "text": df["content"],
+        "emotion": df["sentiment"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
+    })
+
+def normalize_kaggle_emotions_labels(df):
+    return pd.DataFrame({
+        "text": df["text"],
+        "emotion": df["emotion"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
+    })
+
+def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
+    goemotions_normalized = normalize_go_emotions_labels(goemotions_df["labels"])
+    kaggle_emotions_normalized = normalize_kaggle_emotions_labels(kaggle_emotions_df)
+    isear_emotions_normalized = normalize_isear_labels(isear_emotions_df)
+
+    return goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized
+
+if __name__ == "__main__":
+    goemotions_df = pd.read_csv("data/raw/goemotions/goemotions.csv")
+    kaggle_emotions_df = pd.read_csv("data/raw/kaggle/kaggle_dataset.csv")
+    isear_emotions_df = pd.read_csv("data/raw/isear/isear_dataset.csv")
+
+    goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized = normalize_datasets(
+        goemotions_df, kaggle_emotions_df, isear_emotions_df
+    )
+
+    goemotions_normalized.to_csv("data/processed/goemotions_normalized.csv", index=False)
+    kaggle_emotions_normalized.to_csv("data/processed/kaggle_emotions_normalized.csv", index=False)
+    isear_emotions_normalized.to_csv("data/processed/isear_emotions_normalized.csv", index=False)
