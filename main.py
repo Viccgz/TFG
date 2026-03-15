@@ -48,27 +48,23 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, source):
   
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
+        # TODO: eliminar la parte de n_items used, ya que haran dos llamdas: sentimiento y luego emociones independientemente de si hay imagenes o no (no aplica para estos datasets)
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_" + llm_chosen]) or pd.isnull(row["justification_" + llm_chosen]):
             if llm_chosen.upper() == 'CHATGPT':
-                sentiment, certainty, justification, n_items_used = llm_call.send_to_chatgpt(message, media, justification, n_media, n_items_used )
+                sentiment, certainty, justification = llm_call.send_to_chatgpt(message, media, justification)
             elif llm_chosen.upper() == 'GEMINI':
-                sentiment, certainty, justification, n_items_used = llm_call.send_to_gemini(message, media, justification, n_media, n_items_used )
+                sentiment, certainty, justification = llm_call.send_to_gemini(message, media, justification )
             elif llm_chosen.upper() == 'DEEPSEEK':
-                sentiment, certainty, justification, n_items_used = llm_call.send_to_deepseek(message, media, justification, n_media, n_items_used )
+                sentiment, certainty, justification = llm_call.send_to_deepseek(message, media, justification)
             # ES: Actualizar el dataframe creando una nueva columna
             # EN: Update the dataframe creating a new column
             df.at[index, "sentiment_" + llm_chosen] = sentiment
             df.at[index, "certainty_" + llm_chosen] = certainty
             df.at[index, "justification_" + llm_chosen] = justification
-            df.at[index, "n_items_decision"] = n_items_used
 
         # ES: Guardar en MongoDB
         # EN: Save in MongoDB
-        if source.upper() == 'X':
-            utils.save_in_mongodb_final_csv_X(collection, message, sentiment, certainty, justification, n_media, n_items_used, id_source, created_at, author_id, date, time, source, n_items, n_likes, n_retweets, n_impressions, n_replies, n_quotes, n_bookmarks)
-        else:
-            utils.save_in_mongodb_final_csv_Telegram (collection, id_message, chat, message,  media, n_items, n_media, sender_id, dateCreated, lang, justification, n_items_used, sentiment, certainty)
-        n_items_used = 1
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time)
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
@@ -76,6 +72,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, source):
 
 if __name__ == "__main__":
     
+    #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
     source = input("Which dataset would you like to get analyzed? (X/Telegram): ")
     while source.upper() != 'X' and source.upper() != 'TELEGRAM':
         source = input("Incorrect format, from which social network would you like to get the data? (X/Telegram): ")
