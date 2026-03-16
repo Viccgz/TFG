@@ -72,31 +72,43 @@ EMOTION_MAP = {
     "desire": "neutral"
 }
 
-def normalize_go_emotions_labels(labels):
+def normalize_go_emotions_labels(df):
     emotions = []
+    ids_list = []
+    texts = []
 
-    for label in labels:
-        ids = ast.literal_eval(label)
+    for index, row in df.iterrows():
+        ids = ast.literal_eval(row["labels"])
         emotion = GO_EMOTIONS_LABELS[ids[0]]
         mapped_emotion = EMOTION_MAP.get(emotion, "neutral")
         emotions.append(mapped_emotion)
+        ids_list.append(row["id"])
+        texts.append(row["text"])
 
-    return pd.DataFrame({"text": labels.index, "emotion": emotions})
+    return pd.DataFrame({ "id": ids_list, "text": texts, "emotion": emotions })
 
 def normalize_isear_labels(df):
     return pd.DataFrame({
+        "id": df["ID"],
         "text": df["content"],
         "emotion": df["sentiment"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
     })
 
 def normalize_kaggle_emotions_labels(df):
-    return pd.DataFrame({
-        "text": df["text"],
-        "emotion": df["emotion"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
-    })
+    id = 0
+    texts = []    
+    emotions = []
+    for index, row in df.iterrows():
+        text = row["text"]
+        emotion = row["emotion"]
+        mapped_emotion = EMOTION_MAP.get(emotion, "neutral")
+        texts.append(text)
+        emotions.append(mapped_emotion)
+        id += 1
+    return pd.DataFrame({"id": range(id), "text": texts, "emotion": emotions})
 
 def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
-    goemotions_normalized = normalize_go_emotions_labels(goemotions_df["labels"])
+    goemotions_normalized = normalize_go_emotions_labels(goemotions_df)
     kaggle_emotions_normalized = normalize_kaggle_emotions_labels(kaggle_emotions_df)
     isear_emotions_normalized = normalize_isear_labels(isear_emotions_df)
 
