@@ -47,4 +47,4 @@ def descargar_datasets():
     return goemotions_df, kaggle_emotions_df, isear_emotions_df
 
 if __name__ == "__main__":
-    descargar_datasets()
+    goemotions_dataset, kaggle_emotions_dataset, isear_emotions_dataset = descargar_datasets()

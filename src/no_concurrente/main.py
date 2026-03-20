@@ -1,8 +1,8 @@
 import pandas as pd
 from pymongo import MongoClient
-import llm_call
+import sentiment_analysis.llm_call as llm_call
 import utils
-import libraries_call
+import sentiment_analysis.libraries_call as libraries_call
 import metrics
 
 n_items_used = 1
@@ -21,50 +21,50 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, source):
     for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen]:
         if column not in df.columns:
             df[column] = ""
-
+    
     for index, row in df.iterrows():
-        id_source = row["id_source"]
-        created_at = row["created_at"]
-        author_id = row["author_id"]
         date = row["date"]
         time = row["time"]
         source = row["source"]
-        n_items = row["n_items"]
-        n_likes = row["n_likes"]
-        n_retweets = row["n_retweets"]
-        n_impressions = row["n_impressions"]
-        n_replies = row["n_replies"]
-        n_quotes = row["n_quotes"]
-        n_bookmarks = row["n_bookmarks"]
         message = row["message"]
-        n_media = row.get("n_media", 0)
-        media = row.get("media", [])
-        id_message = row.get("id_message", "")
-        chat = row.get("chat", "")
-        sender_id = row.get("sender_id", "")
-        dateCreated = row.get("dateCreated", "")
-        lang = row.get("lang", "")
-        
-  
+
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
-        # TODO: eliminar la parte de n_items used, ya que haran dos llamdas: sentimiento y luego emociones independientemente de si hay imagenes o no (no aplica para estos datasets)
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_" + llm_chosen]) or pd.isnull(row["justification_" + llm_chosen]):
             if llm_chosen.upper() == 'CHATGPT':
-                sentiment, certainty, justification = llm_call.send_to_chatgpt(message, media, justification)
+                sentiment, certainty, justification, date, time = llm_call.send_to_chatgpt(message, justification, "sentiment_analysis")
             elif llm_chosen.upper() == 'GEMINI':
-                sentiment, certainty, justification = llm_call.send_to_gemini(message, media, justification )
+                sentiment, certainty, justification, date, time = llm_call.send_to_gemini(message, justification, "sentiment_analysis")
             elif llm_chosen.upper() == 'DEEPSEEK':
-                sentiment, certainty, justification = llm_call.send_to_deepseek(message, media, justification)
+                sentiment, certainty, justification, date, time = llm_call.send_to_deepseek(message, justification, "sentiment_analysis")
+            
             # ES: Actualizar el dataframe creando una nueva columna
             # EN: Update the dataframe creating a new column
             df.at[index, "sentiment_" + llm_chosen] = sentiment
             df.at[index, "certainty_" + llm_chosen] = certainty
             df.at[index, "justification_" + llm_chosen] = justification
+            df.at[index, "processing_date"] = date
+            df.at[index, "processing_hour"] = time
 
-        # ES: Guardar en MongoDB
-        # EN: Save in MongoDB
+            #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
+            #EN: Perform emotion analysis with LLMs for each message, and save the result
+            if llm_chosen.upper() == 'CHATGPT':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_chatgpt(message, justification, "emotion_analysis")
+            elif llm_chosen.upper() == 'GEMINI':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_gemini(message, justification, "emotion_analysis")
+            elif llm_chosen.upper() == 'DEEPSEEK':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_deepseek(message, justification, "emotion_analysis")
+            
+            df.at[index, "emotion_" + llm_chosen] = emotion
+            df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
+            df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
+            df.at[index, "processing_date_emotion"] = date_emotion
+            df.at[index, "processing_hour_emotion"] = time_emotion
+
+            # ES: Guardar en MongoDB
+            # EN: Save in MongoDB
             utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time)
+            
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
@@ -73,7 +73,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, source):
 if __name__ == "__main__":
     
     #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
-    source = input("Which dataset would you like to get analyzed? (X/Telegram): ")
+    source = input("Which dataset would you like to get analyzed?: ")
     while source.upper() != 'X' and source.upper() != 'TELEGRAM':
         source = input("Incorrect format, from which social network would you like to get the data? (X/Telegram): ")
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     df.to_csv(csv_filename, index=False)
     print(f"CSV stored in: {csv_filename}")
 
-    stringJustification = input("Would you like to get the sentiment classified? (Y/N): ")
+    stringJustification = input("Would you like a justification of the sentiment analysis? (Y/N): ")
     valid_format = False
     while not valid_format:
         if stringJustification.upper() == 'Y' or stringJustification.upper() == 'N':

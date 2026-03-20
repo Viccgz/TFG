@@ -1,5 +1,6 @@
+from datetime import datetime
+from logging import log
 import re
-import datetime
 import json
 
 LOG_FILE_CHATGPT = "chatgpt_log.txt"
@@ -22,15 +23,13 @@ def log_message(msg, llm):
 
 # ES: Función para guardar en MongoDB el resultado final
 # EN: Function to save the final result in MongoDB
-def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification):
+def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour):
 
     #ES: Porcesar la justificacion de la respuesta y cambiar caracteres especiales
     #EN: Process the justification of the response and change special characters
     if justification:
         justification = justification.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("&amp", "and ").replace("&", "and").replace(";", " ")
 
-    processing_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    processing_hour = datetime.datetime.now().strftime("%H:%M:%S")
 
     collection.insert_one({
             "message": message,
@@ -57,7 +56,7 @@ def sanitize_text(text):
     text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("&amp", "and ").replace("&", "and").replace(";", " ").replace(":", " ")
     return text
 
-def parse_chatgpt_response(response):
+def parse_response(response):
     try:
         sanitized_response = sanitize_json(response)
         data = json.loads(sanitized_response)
@@ -71,3 +70,16 @@ def parse_chatgpt_response(response):
     except json.JSONDecodeError as e:
         log_message(f"Error decoding JSON: {e}")
         return "unknown", 0.0, "Error parsing response"
+    
+def process_response(response, source):
+    try:
+        sanitize_response = sanitize_json(response)
+        log_message(f"ChatGPT's sanitized response:\n{sanitize_response}", source)
+        sentiment, certainty, justification = parse_response(sanitize_response)
+        processing_date = datetime.now().strftime("%Y-%m-%d")
+        processing_hour = datetime.now().strftime("%H:%M:%S")
+        log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
+        return sentiment, certainty, justification, processing_date, processing_hour
+    except json.JSONDecodeError as e:
+        log_message(f"Error decoding JSON: {e}")
+        return 'NA', 'NA', 'NA'
