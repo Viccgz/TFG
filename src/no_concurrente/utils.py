@@ -58,40 +58,61 @@ def sanitize_text(text):
     text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("&amp", "and ").replace("&", "and").replace(";", " ").replace(":", " ")
     return text
 
-def parse_response(response, justify):
+def parse_response(response, justify, evaluation_mode):
     try:
         sanitized_response = sanitize_json(response)
         data = json.loads(sanitized_response)
-        emotion = data.get("emotion", "=")
-        log_message(f"Emotion: {emotion}\n")
+        if evaluation_mode == "sentiment_analysis":
+            sentiment = data.get("sentiment", "unknown")
+            log_message(f"Sentiment: {sentiment}\n")
+        else:
+            emotion = data.get("emotion", "=")
+            log_message(f"Emotion: {emotion}\n")
+
         certainty = data.get("certainty", 0.0)
         log_message(f"Certainty: {certainty}\n")
         
         if justify:
             justification = data.get("justification", "")
             log_message(f"Justification: {justification}\n")
-            return emotion, certainty, justification
+            if evaluation_mode == "sentiment_analysis":
+                return sentiment, certainty, justification
+            else:
+                return emotion, certainty, justification
         else:
-            return emotion, certainty
+            if evaluation_mode == "sentiment_analysis":
+                return sentiment, certainty
+            else:
+                return emotion, certainty
         
     except json.JSONDecodeError as e:
         log_message(f"Error decoding JSON: {e}")
         return "unknown", 0.0, "Error parsing response"
     
-def process_response(response, source, justify):
+def process_response(response, source, justify, evaluation_mode):
     try:
         sanitize_response = sanitize_json(response)
         log_message(f"ChatGPT's sanitized response:\n{sanitize_response}", source)
         processing_date = datetime.now().strftime("%Y-%m-%d")
         processing_hour = datetime.now().strftime("%H:%M:%S")
         if justify:
-            sentiment, certainty, justification = parse_response(sanitize_response, justify)
-            log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-            return sentiment, certainty, justification, processing_date, processing_hour   
+            if evaluation_mode == "sentiment_analysis":
+                sentiment, certainty, justification = parse_response(sanitize_response, justify)
+                log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
+                return sentiment, certainty, justification, processing_date, processing_hour 
+            else:
+                emotion, certainty, justification = parse_response(sanitize_response, justify)
+                log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
+                return emotion, certainty, justification, processing_date, processing_hour  
         else:
-            sentiment, certainty = parse_response(sanitize_response, justify)
-            log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-            return sentiment, certainty, processing_date, processing_hour
+            if evaluation_mode == "sentiment_analysis":
+                sentiment, certainty = parse_response(sanitize_response, justify)
+                log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
+                return sentiment, certainty, processing_date, processing_hour
+            else:
+                emotion, certainty = parse_response(sanitize_response, justify)
+                log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
+                return emotion, certainty, processing_date, processing_hour
     
     except json.JSONDecodeError as e:
         log_message(f"Error decoding JSON: {e}")

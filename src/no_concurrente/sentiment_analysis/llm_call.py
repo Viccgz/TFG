@@ -24,9 +24,9 @@ clientDeepseek = OpenAI(api_key= config['deepseek_api_key'], base_url="https://a
 
 # ES: Pompts analisis de sentimiento
 # EN: Sentiment analysis prompts
-sentiment_prompt = "From the data provided, classify the emotion the text as for example Happiness, sadness, anger, etc or indeterminable. The third key IS certainty, NOT certainly\n "
-sentiment_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
-sentiment_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
+sentiment_prompt = "From the data provided, classify the sentiment of the text as positive, negative, or neutral. You must use the following values for the sentiment key: positive, negative, or neutral. The third key IS certainty, NOT certainly\n "
+sentiment_justify_prompt = "Return the result as a JSON object with the following keys: sentiment, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
+sentiment_not_justify_prompt = "Return the result as a JSON object with the following keys: sentiment and certainty. Format example: {\"sentiment\": \"positive\", \"certainty\": \"90%\"}\n "
 
 # ES: Pompts analisis de emociones
 # EN: Emotion analysis prompts
@@ -67,10 +67,10 @@ def send_to_chatgpt(text, justify, evaluation_mode):
     try:
         utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt")
         if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify)
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify, evaluation_mode)
             return sentiment, certainty, justification, processing_date, processing_hour
         else:
-            sentiment, certainty, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify)
+            sentiment, certainty, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify, evaluation_mode)
             return sentiment, certainty, processing_date, processing_hour
 
     except json.JSONDecodeError as e:
@@ -104,10 +104,10 @@ def send_to_deepseek(text, justify, evaluation_mode):
         # # EN: Process the Deepseek response
         utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek")
         if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", justify)
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", justify, evaluation_mode)
             return sentiment, certainty, justification, processing_date, processing_hour
         else:
-            sentiment, certainty, processing_date, processing_hour = utils.process_response(output, "deepseek", justify)
+            sentiment, certainty, processing_date, processing_hour = utils.process_response(output, "deepseek", justify, evaluation_mode)
             return sentiment, certainty, processing_date, processing_hour
     
     except json.JSONDecodeError as e:
@@ -131,10 +131,10 @@ def send_to_gemini(text, justify, evaluation_mode):
             return 'NA'
         
         if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", justify)
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", justify, evaluation_mode)
             return sentiment, certainty, justification, processing_date, processing_hour
         else:
-             sentiment, certainty, processing_date, processing_hour = utils.process_response(response, "gemini", justify)
+             sentiment, certainty, processing_date, processing_hour = utils.process_response(response, "gemini", justify, evaluation_mode)
              return sentiment, certainty, processing_date, processing_hour
 
     except json.JSONDecodeError as e:
