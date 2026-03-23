@@ -1,6 +1,6 @@
 id,text,emotion,sentiment_chatgpt,certainty_chatgpt,justification_chatgpt,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_emotion,processing_hour_emotion
-eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,85%,,2026-03-23,19:17:45,happiness,85%,,2026-03-23,19:17:46
-ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,85%,,2026-03-23,19:17:47,sadness,80%,,2026-03-23,19:17:47
-eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,85%,,2026-03-23,19:17:50,anger,95%,,2026-03-23,19:17:50
-ed7ypvh,To make her feel threatened,fear,negative,,,85%,,2026-03-23,19:17:51,fear,85%,,2026-03-23,19:17:52
-ed0bdzj,Dirty Southern Wankers,anger,negative,,,95%,,2026-03-23,19:17:52,anger,85%,,2026-03-23,19:17:53
+eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,80%,,2026-03-23,19:28:38,joy,85%,,2026-03-23,19:28:40
+ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,85%,,2026-03-23,19:28:41,sadness,85%,,2026-03-23,19:28:41
+eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,95%,,2026-03-23,19:28:42,anger,95%,,2026-03-23,19:28:42
+ed7ypvh,To make her feel threatened,fear,negative,,,95%,,2026-03-23,19:28:43,fear,85%,,2026-03-23,19:28:44
+ed0bdzj,Dirty Southern Wankers,anger,negative,,,95%,,2026-03-23,19:28:44,disgust,85%,,2026-03-23,19:28:45

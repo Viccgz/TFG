@@ -10,7 +10,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
                                                   # EN: Change to the PC's which has the database IP if saving in another computer
     DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
-    COLLECTION_NAME = llm_chosen + '_results'
+    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results'
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]

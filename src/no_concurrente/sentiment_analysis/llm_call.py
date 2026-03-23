@@ -3,6 +3,7 @@ import openai
 import utils
 import google.generativeai as genai
 from openai import OpenAI
+from dataset_preprocessing.emotion_mapper import EMOTION_MAP
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -30,7 +31,10 @@ sentiment_not_justify_prompt = "Return the result as a JSON object with the foll
 
 # ES: Pompts analisis de emociones
 # EN: Emotion analysis prompts
-emotion_prompt = "From the data provided, classify the emotion the text as for example Happiness, sadness, anger, etc or indeterminable. The third key IS certainty, NOT certainly\n "
+unique_emotions = sorted(list(set(EMOTION_MAP.values())))
+emotions_str = ", ".join(unique_emotions)
+
+emotion_prompt = "From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
 emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
 emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
 
