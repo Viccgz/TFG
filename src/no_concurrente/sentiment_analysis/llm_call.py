@@ -37,7 +37,7 @@ emotion_not_justify_prompt = "Return the result as a JSON object with the follow
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
-def send_to_chatgpt(text, justify, evaluation_mode):
+def send_to_chatgpt(text, justify, evaluation_mode, dataset):
     # ES: Credenciales de la API de ChatGPT
     # EN: ChatGPT API credentials
     openai.api_key = OPEN_AI_KEY_SECRET
@@ -56,28 +56,25 @@ def send_to_chatgpt(text, justify, evaluation_mode):
                 stream=False
     )
     response_json = response.choices[0].message.content.strip()
-    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt") 
+    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt", dataset) 
 
     # ES: Verifico si la respuesta JSON no está vacía
     # EN: Check if the JSON response is not empty
     if not response_json:
-        utils.log_message("Null response received.", "chatgpt")
-        return 'NA'
+        utils.log_message("Null response received.", "chatgpt", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
         
     try:
-        utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt")
-        if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify, evaluation_mode)
-            return sentiment, certainty, justification, processing_date, processing_hour
-        else:
-            sentiment, certainty, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", justify, evaluation_mode)
-            return sentiment, certainty, processing_date, processing_hour
+        utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt", dataset)
+        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", evaluation_mode, dataset)
+        return sentiment, certainty, justification, processing_date, processing_hour
+
 
     except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "chatgpt")
-        return 'NA'
+        utils.log_message(f"Error decoding JSON: {e}", "chatgpt", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
  
-def send_to_deepseek(text, justify, evaluation_mode):
+def send_to_deepseek(text, justify, evaluation_mode, dataset):
 
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
@@ -97,25 +94,25 @@ def send_to_deepseek(text, justify, evaluation_mode):
     # ES: Verifico si la respuesta JSON no está vacía
     # EN: Check if the JSON response is not empty
     if not output:
-        utils.log_message("Null response received.", "deepseek")
-        return 'NA'
+        utils.log_message("Null response received.", "deepseek", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
     try:
         # ES: Procesar la respuesta de Deepseek        
         # # EN: Process the Deepseek response
-        utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek")
+        utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek", dataset)
         if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", justify, evaluation_mode)
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
             return sentiment, certainty, justification, processing_date, processing_hour
         else:
-            sentiment, certainty, processing_date, processing_hour = utils.process_response(output, "deepseek", justify, evaluation_mode)
+            sentiment, certainty, _, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
             return sentiment, certainty, processing_date, processing_hour
     
     except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "deepseek")
-        return 'NA'
+        utils.log_message(f"Error decoding JSON: {e}", "deepseek", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
-def send_to_gemini(text, justify, evaluation_mode):
+def send_to_gemini(text, justify, evaluation_mode, dataset):
     # ES: Generar la respuesta inicial con Gemini
     # EN: Generate the initial response with Gemini
     try:
@@ -125,22 +122,22 @@ def send_to_gemini(text, justify, evaluation_mode):
             prompt = ( text + emotion_prompt + emotion_justify_prompt) if justify else (text + emotion_prompt + emotion_not_justify_prompt)
 
         response = modelGemini.generate_content(prompt).text.strip()
-        utils.log_message(f"Gemini's raw response:\n{response}", "gemini")
+        utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset)
         if not response:
-            utils.log_message("Null response received.", "gemini")
-            return 'NA'
+            utils.log_message("Null response received.", "gemini", dataset)
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
         
         if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", justify, evaluation_mode)
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
             return sentiment, certainty, justification, processing_date, processing_hour
         else:
-             sentiment, certainty, processing_date, processing_hour = utils.process_response(response, "gemini", justify, evaluation_mode)
+             sentiment, certainty, _, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
              return sentiment, certainty, processing_date, processing_hour
 
     except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "gemini")
-        return 'NA'
+        utils.log_message(f"Error decoding JSON: {e}", "gemini", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
     except Exception as e:
-        utils.log_message(f"Error processing response: {e}", "gemini")
-        return 'NA'
+        utils.log_message(f"Error processing response: {e}", "gemini", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
 

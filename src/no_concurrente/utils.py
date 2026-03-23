@@ -1,29 +1,37 @@
 from datetime import datetime
 from logging import log
+import os
 import re
 import json
 
-LOG_FILE_CHATGPT = "chatgpt_log.txt"
-LOG_FILE_GEMINI = "gemini_log.txt"
-LOG_FILE_DEEPSEEK = "deepseek_log.txt"
+# ----------------LOGGING UTILS----------------
 
-def log_message(msg, llm):
-    
-    # ES: Imprimir mensaje y guardar en archivo de log
-    # EN: Print message and save to log file
-    if llm == "chatgpt":
-        LOG_FILE = LOG_FILE_CHATGPT
-    elif llm == "gemini":
-        LOG_FILE = LOG_FILE_GEMINI
-    elif llm == "deepseek":
-        LOG_FILE = LOG_FILE_DEEPSEEK
+LOG_PLANTILLAS = {
+    "chatgpt": "LOGS/{dataset}_chatgpt_log.txt",
+    "gemini": "LOGS/{dataset}_gemini_log.txt",
+    "deepseek": "LOGS/{dataset}_deepseek_log.txt"
+}
+
+def log_message(msg, llm, dataset):
+    template = LOG_PLANTILLAS.get(llm.lower())
+    if not template:
+        print(f"Error: LLM '{llm}' invvalido")
+        return
+    log_file_path = template.format(dataset=dataset.upper())
+    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     print(msg)
-    with open(LOG_FILE, "a", encoding="utf-8") as log_file:
-        log_file.write(msg + "\n")
+    try:
+        with open(log_file_path, "a", encoding="utf-8") as f:
+            f.write(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}\n")
+    except Exception as e:
+        print(f"No se pudo escribir en el log: {e}")
+
+
+# ----------------DB UTILS----------------
 
 # ES: Función para guardar en MongoDB el resultado final
 # EN: Function to save the final result in MongoDB
-def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour):
+def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id):
 
     #ES: Porcesar la justificacion de la respuesta y cambiar caracteres especiales
     #EN: Process the justification of the response and change special characters
@@ -34,14 +42,24 @@ def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justifi
         message = sanitize_text(message)
 
     collection.insert_one({
+            "id": id,
             "message": message,
+            "emotion_raw": emotion_raw,
             "sentiment": sentiment,
             "certainty": certainty,
             "justification": justification,
             "date": processing_date,
-            "time": processing_hour
+            "time": processing_hour,
+            "emotion": emotion,
+            "certainty_emotion": certainty_emotion,
+            "justification_emotion": justification_emotion,
+            "date_emotion": date_emotion,
+            "time_emotion": time_emotion
         })
 
+
+
+# ----------------RESPONSE PROCESSING UTILS----------------
 def sanitize_json(raw_json):
     try:
         # ES: Eliminar marcadores de bloque de código circundantes. Este problema surgio porque se devolvia el json con formato ```json y ``` alrededor, lo cual hacia que json.loads fallara
@@ -58,62 +76,48 @@ def sanitize_text(text):
     text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("&amp", "and ").replace("&", "and").replace(";", " ").replace(":", " ")
     return text
 
-def parse_response(response, justify, evaluation_mode):
+def parse_response(response, evaluation_mode, dataset, source):
     try:
         sanitized_response = sanitize_json(response)
         data = json.loads(sanitized_response)
         if evaluation_mode == "sentiment_analysis":
             sentiment = data.get("sentiment", "unknown")
-            log_message(f"Sentiment: {sentiment}\n")
+            log_message(f"Sentiment: {sentiment}\n", source,dataset)
         else:
             emotion = data.get("emotion", "=")
-            log_message(f"Emotion: {emotion}\n")
+            log_message(f"Emotion: {emotion}\n", source, dataset)
 
         certainty = data.get("certainty", 0.0)
-        log_message(f"Certainty: {certainty}\n")
-        
-        if justify:
-            justification = data.get("justification", "")
-            log_message(f"Justification: {justification}\n")
-            if evaluation_mode == "sentiment_analysis":
-                return sentiment, certainty, justification
-            else:
-                return emotion, certainty, justification
+        log_message(f"Certainty: {certainty}\n", source, dataset)
+
+        justification = data.get("justification", "")
+        log_message(f"Justification: {justification}\n", source, dataset)
+        if evaluation_mode == "sentiment_analysis":
+            return sentiment, certainty, justification
         else:
-            if evaluation_mode == "sentiment_analysis":
-                return sentiment, certainty
-            else:
-                return emotion, certainty
+            return emotion, certainty, justification
+
         
     except json.JSONDecodeError as e:
         log_message(f"Error decoding JSON: {e}")
         return "unknown", 0.0, "Error parsing response"
     
-def process_response(response, source, justify, evaluation_mode):
+def process_response(response, source, evaluation_mode, dataset):
     try:
         sanitize_response = sanitize_json(response)
-        log_message(f"ChatGPT's sanitized response:\n{sanitize_response}", source)
+        log_message(f"{source}'s sanitized response:\n{sanitize_response}", source, dataset)
         processing_date = datetime.now().strftime("%Y-%m-%d")
         processing_hour = datetime.now().strftime("%H:%M:%S")
-        if justify:
-            if evaluation_mode == "sentiment_analysis":
-                sentiment, certainty, justification = parse_response(sanitize_response, justify)
-                log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-                return sentiment, certainty, justification, processing_date, processing_hour 
-            else:
-                emotion, certainty, justification = parse_response(sanitize_response, justify)
-                log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-                return emotion, certainty, justification, processing_date, processing_hour  
+
+        if evaluation_mode == "sentiment_analysis":
+            sentiment, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
+            log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset)  
+            return sentiment, certainty, justification, processing_date, processing_hour 
         else:
-            if evaluation_mode == "sentiment_analysis":
-                sentiment, certainty = parse_response(sanitize_response, justify)
-                log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-                return sentiment, certainty, processing_date, processing_hour
-            else:
-                emotion, certainty = parse_response(sanitize_response, justify)
-                log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source)  
-                return emotion, certainty, processing_date, processing_hour
+            emotion, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
+            log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset)  
+            return emotion, certainty, justification, processing_date, processing_hour  
     
     except json.JSONDecodeError as e:
         log_message(f"Error decoding JSON: {e}")
-        return 'NA', 'NA', 'NA'
+        return 'NA', 'NA', 'NA', 'NA', 'NA'

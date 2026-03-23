@@ -1,8 +1,16 @@
 openai == 1.65.4
-anthropic == 0.43.0
 google-generativeai == 0.8.3
-llamaapi == 0.1.36
-telethon == 1.38.1
-tweepy == 4.14.0
 pandas == 2.2.3
 pymongo == 4.10.1
+
+textblob
+nltk
+transformers
+torch  
+scipy
+numpy
+
+scikit-learn
+krippendorff
+matplotlib
+wordcloud
