@@ -9,14 +9,9 @@ from scipy.special import softmax
 import numpy as np
 import urllib.request
 import csv
+from nrclex import NRCLex
 
-def TextBlob_sentiment_analysis(input_file):
-    # Read the CSV file
-    reviews_df = pd.read_csv(input_file)
-
-    # Check the structure of the DataFrame
-    print(reviews_df.head())
-
+def TextBlob_sentiment_analysis(df):
     # Function to analyze sentiment and return polarity and subjectivity
     def analyze_sentiment(text):
         analysis = TextBlob(text)
@@ -34,29 +29,15 @@ def TextBlob_sentiment_analysis(input_file):
         return sentiment, polarity, subjectivity
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']] = reviews_df['text'].apply(
+    df[['sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
-    # Print the results
-    print(reviews_df[['id', 'text', 'sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']])
+    return df
 
-    # Save the results to a new CSV file
-    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_TextBlob.csv')
-    reviews_df.to_csv(output_file_path, index=False)
-
-    print(f'Sentiment analysis results saved to {output_file_path}')
-    return output_file_path
-
-def vader_sentiment_analysis(input_file):
+def vader_sentiment_analysis(df):
     # Download VADER lexicon
     nltk.download('vader_lexicon')
-
-    # Read the CSV file
-    reviews_df = pd.read_csv(input_file)
-
-    # Check the structure of the DataFrame
-    print(reviews_df.head())
 
     # Initialize the VADER sentiment intensity analyzer
     sia = SentimentIntensityAnalyzer()
@@ -81,21 +62,13 @@ def vader_sentiment_analysis(input_file):
         return sentiment, polarity, pos, neg, neu
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']] = reviews_df['text'].apply(
+    df[['sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
-    # Print the results
-    print(reviews_df[['id', 'text', 'sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']])
+    return df
 
-    # Save the results to a new CSV file
-    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_VADER.csv')
-    reviews_df.to_csv(output_file_path, index=False)
-
-    print(f'Sentiment analysis results saved to {output_file_path}')
-    return output_file_path
-
-def BERT_sentiment_analysis(input_file):
+def BERT_sentiment_analysis(df):
     # Preprocesamiento del texto
     def preprocess(text):
         new_text = []
@@ -118,9 +91,6 @@ def BERT_sentiment_analysis(input_file):
         html = f.read().decode('utf-8').split("\n")
         csvreader = csv.reader(html, delimiter='\t')
         labels = [row[1] for row in csvreader if len(row) > 1]
-
-    # Leer archivo CSV
-    df = pd.read_csv(input_file, encoding="utf-8", sep=',')  # <-- cambia aquí el nombre de tu archivo
 
     # Clasificar cada mensaje
     results = []
@@ -150,7 +120,42 @@ def BERT_sentiment_analysis(input_file):
     # Añadir columna de sentimiento
     df["sentiment_BERT"] = results
 
-    # Guardar resultado a nuevo CSV
-    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_BERT.csv')
-    df.to_csv(output_file_path, index=False)
-    return output_file_path
+    return df
+
+def NRCLex_emotion_analysis(df):
+    def analyze_emotion(text):
+        emotion = NRCLex(text)
+        top_emotions = emotion.top_emotions
+        if top_emotions:
+            return top_emotions[0][0]  # Primary emotion
+        else:
+            return 'neutral'
+    
+    df['emotion_NRCLex'] = df['text'].apply(analyze_emotion)
+    return df
+
+def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
+    if library == "EmoRoBERTa":
+        MODEL = "j-hartmann/emotion-english-distilroberta-base"
+    elif library == "GoEmotions":
+        MODEL = "monologg/bert-base-cased-goemotions-original"
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL)
+    
+    # Get labels
+    labels = model.config.id2label
+    
+    results = []
+    for text in df["text"]:
+        if pd.isna(text):
+            results.append("neutral")
+            continue
+        encoded_input = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+        output = model(**encoded_input)
+        scores = output[0][0].detach().numpy()
+        scores = softmax(scores)
+        label = labels[np.argmax(scores)]
+        results.append(label)
+    
+    df["emotion_EmoRoBERTa"] = results
+    return df

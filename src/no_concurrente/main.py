@@ -118,13 +118,32 @@ if __name__ == "__main__":
         else:
             llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
 
-    input_csv = csv_filename
-    output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_emotional_analysis_results.csv"
-    process_csv(input_csv, output_csv, llm_chosen, justification, dataset)
+    output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
+    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
  
-    new_out_csv = libraries_call.TextBlob_sentiment_analysis(output_csv)
-    new_out_csv = libraries_call.vader_sentiment_analysis(new_out_csv)
-    new_out_csv = libraries_call.BERT_sentiment_analysis(new_out_csv)
+    # Load the CSV with LLM results
+    df = pd.read_csv(output_csv)
+    
+    # Perform sentiment analysis with libraries
+    df = libraries_call.TextBlob_sentiment_analysis(df)
+    df = libraries_call.vader_sentiment_analysis(df)
+    df = libraries_call.BERT_sentiment_analysis(df)
+    
+    # Save sentiment analysis results
+    sentiment_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_analysis_results.csv"
+    df.to_csv(sentiment_csv, index=False)
+    print(f"Sentiment analysis results saved to {sentiment_csv}")
+    
+    # Perform emotion analysis with libraries
+    df = libraries_call.NRCLex_emotion_analysis(df)
+    df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
+    df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
+    
+    # Save emotion analysis results
+    emotion_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_emotion_analysis_results.csv"
+    df.to_csv(emotion_csv, index=False)
+    print(f"Emotion analysis results saved to {emotion_csv}")
+    
     #new_out_csv = metrics.calculate_majority(new_out_csv)
     #metrics.calculate_accuracy(new_out_csv)
     #metrics.interrated(new_out_csv)
