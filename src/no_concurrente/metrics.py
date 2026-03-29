@@ -12,14 +12,12 @@ import re
 from wordcloud import WordCloud
 
 def calculate_majority(file_path):
-        # Load the Excel file
-    #file_path = 'data/USElections2024_All3.xlsx'
-    df = pd.read_excel(file_path)
+        # Load the CSV file
+    df = pd.read_csv(file_path)
 
     # List of LLM columns and Python library columns
-    llm_columns = ['sentiment_gpt', 'sentiment_deepseek', 'sentiment_claude', 
-                'sentiment_gemini', 'sentiment_llama']
-    lib_columns = ['sentimentTextBlob', 'sentimentVader']
+    llm_columns = ['sentiment_CHATGPT', 'sentiment_GEMINI', 'sentiment_DEEPSEEK']
+    lib_columns = ['sentiment_TextBlob', 'sentiment_VADER', 'sentiment_BERT']
 
     # Function to calculate counts and majority decision
     def calculate_stats(row, columns):
@@ -65,21 +63,20 @@ def calculate_majority(file_path):
         df.at[index, 'Lib_neutrals'] = lib_neu
         df.at[index, 'Lib_majority'] = lib_majority
 
-    # Save the updated DataFrame back to the Excel file
-    df.to_excel(file_path, index=False)
+    # Save the updated DataFrame back to the CSV file
+    df.to_csv(file_path, index=False)
 
     print("Processing complete. The file has been updated with the new columns.")
 
 def calculate_accuracy(file_path):
-        # Load the original Excel file
+        # Load the original CSV file
     #input_file = 'data/KamalaHarris_X_All4.xlsx'
-    output_file = 'r1_MetricsAccuracy.xlsx'
-    df = pd.read_excel(file_path)
+    output_file = './data/results/metrics_accuracy.csv'
+    df = pd.read_csv(file_path)
 
     # List of all coders (including LLM_majority and Lib_majority)
-    coders = ['sentiment_gpt', 'sentiment_deepseek', 'sentiment_claude', 
-            'sentiment_gemini', 'sentiment_llama', 'sentimentTextBlob', 
-            'sentimentVader', 'LLM_majority', 'Lib_majority']
+    coders = ['sentiment_CHATGPT', 'sentiment_GEMINI', 'sentiment_DEEPSEEK', 'sentiment_TextBlob', 
+            'sentiment_VADER', 'sentiment_BERT', 'LLM_majority', 'Lib_majority']
 
     # Initialize a dictionary to store metrics
     metrics = {
@@ -112,17 +109,17 @@ def calculate_accuracy(file_path):
         ties = counts.get('tie', 0)
         
         # Create mask for valid comparisons (excluding ties and NaN)
-        valid_mask = (~df[coder].isin(['tie', np.nan])) & (~df['GTsentiment'].isin(['tie', np.nan]))
+        valid_mask = (~df[coder].isin(['tie', np.nan])) & (~df['emotion'].isin(['tie', np.nan]))
         
         # Calculate accuracy only on valid comparisons
         if sum(valid_mask) > 0:
-            correct = (df.loc[valid_mask, coder] == df.loc[valid_mask, 'GTsentiment']).sum()
+            correct = (df.loc[valid_mask, coder] == df.loc[valid_mask, 'emotion']).sum()
             accuracy = correct / sum(valid_mask)
         else:
             accuracy = np.nan
         
         # Convert to numerical for sklearn (1: positive, -1: negative, 0: neutral)
-        y_true = df.loc[valid_mask, 'GTsentiment'].map({'+': 1, '-': -1, '=': 0})
+        y_true = df.loc[valid_mask, 'emotion'].map({'+': 1, '-': -1, '=': 0})
         y_pred = df.loc[valid_mask, coder].map({'+': 1, '-': -1, '=': 0})
         
         # Calculate metrics only if we have valid comparisons
@@ -162,8 +159,8 @@ def calculate_accuracy(file_path):
     # Create DataFrame from metrics
     metrics_df = pd.DataFrame(metrics)
 
-    # Save to new Excel file
-    metrics_df.to_excel(output_file, index=False)
+    # Save to new CSV file
+    metrics_df.to_csv(output_file, index=False)
 
     print(f"Metrics calculated and saved to {output_file}")
 
@@ -171,9 +168,8 @@ def interrated(file_path):
         def prepare_data(df):
             """Convert raw data to numerical matrix with consistent shape"""
             sent_map = {'+': 2, '-': 0, '=': 1}
-            coders = ['GTsentiment', 'sentiment_gpt', 'sentiment_deepseek', 
-                    'sentiment_claude', 'sentiment_gemini', 'sentiment_llama',
-                    'sentimentTextBlob', 'sentimentVader', 'LLM_majority', 'Lib_majority']
+            coders = ['emotion', 'sentiment_CHATGPT', 'sentiment_GEMINI', 'sentiment_DEEPSEEK',
+                    'sentiment_TextBlob', 'sentiment_VADER', 'sentiment_BERT', 'LLM_majority', 'Lib_majority']
             
             # Initialize matrix with NaNs
             data = np.full((len(df), len(coders)), np.nan)
@@ -226,13 +222,13 @@ def interrated(file_path):
         def calculate_group_metrics(data, coders):
             """Calculate Kappa and Alpha for different coder groups"""
             groups = {
-                'All_LLMs': [1,2,3,4,5],                   # GPT, DeepSeek, Claude, Gemini, Llama
-                'All_LLMs_plus_majority': [1,2,3,4,5,8],    # + LLM_majority
-                'Python_Libs': [6,7],                       # TextBlob, Vader
-                'All_Automated': [1,2,3,4,5,6,7],           # All LLMs + Python Libs
-                'Full_System': [0,1,2,3,4,5,6,7],           # GT + All LLMs + Python Libs
-                'LLMs_plus_GT': [0,1,2,3,4,5],              # GT + All LLMs
-                'Libs_plus_GT': [0,6,7]                     # GT + Python Libs
+                'All_LLMs': [1,2,3],                   # CHATGPT, GEMINI, DEEPSEEK
+                'All_LLMs_plus_majority': [1,2,3,7],    # + LLM_majority
+                'Python_Libs': [4,5,6],                       # TextBlob, VADER, BERT
+                'All_Automated': [1,2,3,4,5,6],           # All LLMs + Python Libs
+                'Full_System': [0,1,2,3,4,5,6],           # emotion + All LLMs + Python Libs
+                'LLMs_plus_GT': [0,1,2,3],              # emotion + All LLMs
+                'Libs_plus_GT': [0,4,5,6]                     # emotion + Python Libs
             }
             
             results = []
@@ -295,7 +291,7 @@ def interrated(file_path):
             return pd.DataFrame(results)
 
         # Main execution
-        df = pd.read_excel(file_path)
+        df = pd.read_csv(file_path)
         data, coders = prepare_data(df)
 
         # Calculate metrics
@@ -303,21 +299,21 @@ def interrated(file_path):
         group_df = calculate_group_metrics(data, coders)
 
         # Save results
-        with pd.ExcelWriter('r2_interrater_All_individual_groups.xlsx') as writer:
+        with pd.ExcelWriter('./data/results/interrater_metrics.xlsx') as writer:
             pairwise_df.to_excel(writer, sheet_name='Pairwise Metrics', index=False)
             group_df.to_excel(writer, sheet_name='Group Metrics', index=False)
 
-        print("Results saved to 'r2_interrater_All_individual_groups.xlsx'")
+        print("Results saved to './data/results/interrater_metrics.xlsx'")
 
 def calculateStatisticalDiff(file_path):
-        # Load the Excel file
-    df = pd.read_excel(file_path)
+        # Load the CSV file
+    df = pd.read_csv(file_path)
 
     # List of LLM sentiment columns
-    llms = ['sentiment_gpt', 'sentiment_claude', 'sentiment_gemini', 'sentiment_llama', 'sentiment_deepseek']
+    llms = ['sentiment_CHATGPT', 'sentiment_GEMINI', 'sentiment_DEEPSEEK']
 
     # Initialize Excel writer for output
-    writer = pd.ExcelWriter('r3_llm_sentiment_comparison.xlsx', engine='openpyxl')
+    writer = pd.ExcelWriter('./data/results/llm_sentiment_comparison.xlsx', engine='openpyxl')
 
     # 1. Create a contingency table for all LLMs
     # Prepare data: Create a DataFrame where each row is a message, and columns are sentiment labels for each LLM
@@ -383,42 +379,46 @@ def calculateStatisticalDiff(file_path):
     writer.close()
 
 def calculateSummarySentimentLLMs(file_path):
-        # Load the Excel file
-    df = pd.read_excel(file_path)
+    df = pd.read_csv(file_path)
 
     # Initialize Excel writer
-    writer = pd.ExcelWriter('r3_sentimentAnalysis.xlsx', engine='openpyxl')
+    writer = pd.ExcelWriter('./data/results/sentiment_analysis_summary.xlsx', engine='openpyxl')
 
     # 1. Count messages by source
-    source_counts = df['source'].value_counts()
-    print("\n1. Number of Messages by Source:")
-    print(source_counts)
-    source_counts.to_excel(writer, sheet_name='Source_Counts')
+    if 'source' in df.columns:
+        source_counts = df['source'].value_counts()
+        print("\n1. Number of Messages by Source:")
+        print(source_counts)
+        source_counts.to_excel(writer, sheet_name='Source_Counts')
+    else:
+        print("No 'source' column found.")
 
     # 2. Count messages by language
-    lang_counts = df['lang'].value_counts()
-    print("\n2. Number of Messages by Language:")
-    print(lang_counts)
-    lang_counts.to_excel(writer, sheet_name='Language_Counts')
+    if 'lang' in df.columns:
+        lang_counts = df['lang'].value_counts()
+        print("\n2. Number of Messages by Language:")
+        print(lang_counts)
+        lang_counts.to_excel(writer, sheet_name='Language_Counts')
+    else:
+        print("No 'lang' column found.")
 
     # 3. Count messages by language for each source (top 5 languages per source + Others)
-    lang_source_counts = df.groupby(['source', 'lang']).size().unstack(fill_value=0)
-    # For each source, get top 5 languages and sum others
-    top_langs_by_source = {}
-    for source in lang_source_counts.index:
-        top_langs = lang_source_counts.loc[source].sort_values(ascending=False).head(10)
-        others_count = lang_source_counts.loc[source].sum() - top_langs.sum()
-        top_langs['Others'] = others_count
-        top_langs_by_source[source] = top_langs
-    top_langs_df = pd.DataFrame(top_langs_by_source).fillna(0).astype(int)
-    print("\n3. Top 10 Languages by Source (with Others):")
-    print(top_langs_df)
-    top_langs_df.to_excel(writer, sheet_name='Top_Languages_by_Source')
+    if 'source' in df.columns and 'lang' in df.columns:
+        lang_source_counts = df.groupby(['source', 'lang']).size().unstack(fill_value=0)
+        # For each source, get top 5 languages and sum others
+        top_langs_by_source = {}
+        for source in lang_source_counts.index:
+            top_langs = lang_source_counts.loc[source].sort_values(ascending=False).head(10)
+            others_count = lang_source_counts.loc[source].sum() - top_langs.sum()
+            top_langs['Others'] = others_count
+            top_langs_by_source[source] = top_langs
+        top_langs_df = pd.DataFrame(top_langs_by_source).fillna(0).astype(int)
+        print("\n3. Top 10 Languages by Source (with Others):")
+        print(top_langs_df)
+        top_langs_df.to_excel(writer, sheet_name='Top_Languages_by_Source')
 
     # 4. Sentiment analysis for each coder and LLM_majority
-    coders = ['sentiment_gpt', 'sentiment_deepseek', 'sentiment_claude', 'sentiment_gemini', 
-            'sentiment_llama', 'sentimentTextBlob', 'sentimentVader', 'LLM_majority']
-
+    coders = ['sentiment_CHATGPT', 'sentiment_GEMINI', 'sentiment_DEEPSEEK', 'sentiment_TextBlob', 'sentiment_VADER', 'sentiment_BERT', 'LLM_majority']
     for coder in coders:
         # Initialize DataFrame for combined sentiment table
         sentiment_table = pd.DataFrame()
@@ -481,53 +481,54 @@ def calculateSummarySentimentLLMs(file_path):
     writer.close()
 
 def calculateStatisticsSentiment(file_path):
-    # Load the Excel file
-    df = pd.read_excel(file_path)
+    # Load the CSV file
+    df = pd.read_csv(file_path)
 
     # Remove rows where LLM_majority is 'tie'
     df = df[df['LLM_majority'] != 'tie']
 
     # Initialize Excel writer for output
-    writer = pd.ExcelWriter('r3_statisticalTesting_with_pairwise.xlsx', engine='openpyxl')
+    writer = pd.ExcelWriter('./data/results/statistical_testing.xlsx', engine='openpyxl')
 
     # 1. Chi-square test for sentiment differences between sources
-    print("\n1. Chi-square Test for Sentiment Differences Between Sources (Excluding 'tie'):")
-    # Create contingency table for source vs. LLM_majority sentiment
-    source_sentiment = pd.crosstab(df['source'], df['LLM_majority'])
-    print("Contingency Table (Source vs. Sentiment):")
-    print(source_sentiment)
+    if 'source' in df.columns:
+        print("\n1. Chi-square Test for Sentiment Differences Between Sources (Excluding 'tie'):")
+        # Create contingency table for source vs. LLM_majority sentiment
+        source_sentiment = pd.crosstab(df['source'], df['LLM_majority'])
+        print("Contingency Table (Source vs. Sentiment):")
+        print(source_sentiment)
 
-    # Perform chi-square test
-    chi2, p, dof, expected = stats.chi2_contingency(source_sentiment)
-    print(f"\nChi-square Statistic: {chi2:.4f}")
-    print(f"P-value: {p:.4f}")
-    print(f"Degrees of Freedom: {dof}")
-    print("Interpretation: ", "Significant difference" if p < 0.05 else "No significant difference")
+        # Perform chi-square test
+        chi2, p, dof, expected = stats.chi2_contingency(source_sentiment)
+        print(f"\nChi-square Statistic: {chi2:.4f}")
+        print(f"P-value: {p:.4f}")
+        print(f"Degrees of Freedom: {dof}")
+        print("Interpretation: ", "Significant difference" if p < 0.05 else "No significant difference")
 
-    # Save contingency table and results
-    source_sentiment.to_excel(writer, sheet_name='Source_Sentiment_Contingency')
-    results_df = pd.DataFrame({
-        'Chi2_Statistic': [chi2],
-        'P-value': [p],
-        'Degrees_of_Freedom': [dof],
-        'Interpretation': ["Significant difference" if p < 0.05 else "No significant difference"]
-    })
-    results_df.to_excel(writer, sheet_name='Source_Sentiment_Chi2')
-
-    # Post-hoc analysis: Pairwise chi-square tests for sources
-    sources = source_sentiment.index
-    pairwise_results = []
-    for source1, source2 in combinations(sources, 2):
-        # Subset contingency table for the pair
-        pair_table = source_sentiment.loc[[source1, source2]]
-        chi2_pair, p_pair, dof_pair, _ = stats.chi2_contingency(pair_table)
-        pairwise_results.append({
-            'Comparison': f"{source1} vs {source2}",
-            'Chi2_Statistic': chi2_pair,
-            'P-value': p_pair,
-            'Degrees_of_Freedom': dof_pair,
-            'Interpretation': "Significant difference" if p_pair < 0.05 else "No significant difference"
+        # Save contingency table and results
+        source_sentiment.to_excel(writer, sheet_name='Source_Sentiment_Contingency')
+        results_df = pd.DataFrame({
+            'Chi2_Statistic': [chi2],
+            'P-value': [p],
+            'Degrees_of_Freedom': [dof],
+            'Interpretation': ["Significant difference" if p < 0.05 else "No significant difference"]
         })
+        results_df.to_excel(writer, sheet_name='Source_Sentiment_Chi2')
+
+        # Post-hoc analysis: Pairwise chi-square tests for sources
+        sources = source_sentiment.index
+        pairwise_results = []
+        for source1, source2 in combinations(sources, 2):
+        # Subset contingency table for the pair
+            pair_table = source_sentiment.loc[[source1, source2]]
+            chi2_pair, p_pair, dof_pair, _ = stats.chi2_contingency(pair_table)
+            pairwise_results.append({
+                'Comparison': f"{source1} vs {source2}",
+                'Chi2_Statistic': chi2_pair,
+                'P-value': p_pair,
+                'Degrees_of_Freedom': dof_pair,
+                'Interpretation': "Significant difference" if p_pair < 0.05 else "No significant difference"
+            })
     pairwise_df = pd.DataFrame(pairwise_results)
     print("\nPost-hoc Pairwise Chi-square Tests for Sources:")
     print(pairwise_df)
@@ -613,15 +614,15 @@ def calculateStatisticsSentiment(file_path):
     writer.close()
 
 def carryOutTextAnalysis(file_path):
-    # Load the Excel file
-    df = pd.read_excel(file_path)
+    # Load the CSV file
+    df = pd.read_csv(file_path)
 
     # Print column names to help identify the text column
     print("Available columns in the dataset:")
     print(df.columns.tolist())
 
     # Specify the correct text column name (replace 'text' with the actual column name)
-    text_column = 'message'  # CHANGE THIS TO THE CORRECT COLUMN NAME (e.g., 'message', 'content')
+    text_column = 'text'  # CHANGE THIS TO THE CORRECT COLUMN NAME (e.g., 'message', 'content')
 
     # Check if the text column exists
     if text_column not in df.columns:
@@ -631,7 +632,7 @@ def carryOutTextAnalysis(file_path):
     df = df[~df['LLM_majority'].isin(['tie', '='])]
 
     # Initialize Excel writer for output
-    writer = pd.ExcelWriter('r3_sentiment_text_analysis.xlsx', engine='openpyxl')
+    writer = pd.ExcelWriter('./data/results/sentiment_text_analysis.xlsx', engine='openpyxl')
 
     # Function to preprocess text
     def preprocess_text(text):

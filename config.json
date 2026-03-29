@@ -1,16 +1,6 @@
 {
-    "OPEN_AI_KEY_SECRET": "", 
-    "BEARER_TOKEN": "", 
-    "ACCESS_TOKEN_SECRET": "", 
-    "ACCESS_TOKEN": "", 
-    "API_KEY_SECRET": "", 
-    "API_KEY": "", 
-    "API_ID": "", 
-    "API_HASH": "", 
-    "SESSION_NAME": "TelegramSession",
-    "llama_api_key": "", 
+    "OPEN_AI_KEY_SECRET": "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", 
     "genai_api_key": "", 
-    "deepseek_api_key":"", 
-    "claude_api_key": ""
-  }
+    "deepseek_api_key":""
+}
 

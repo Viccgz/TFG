@@ -11,8 +11,7 @@ import urllib.request
 import csv
 
 def TextBlob_sentiment_analysis(input_file):
-    # Read the Excel file
-    #file_path = 'data/USElections2024_All.xlsx'
+    # Read the CSV file
     reviews_df = pd.read_csv(input_file)
 
     # Check the structure of the DataFrame
@@ -35,16 +34,16 @@ def TextBlob_sentiment_analysis(input_file):
         return sentiment, polarity, subjectivity
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment', 'polarity', 'subjectivity']] = reviews_df['message'].apply(
+    reviews_df[['sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']] = reviews_df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
     # Print the results
-    print(reviews_df[['id', 'message', 'sentiment', 'polarity', 'subjectivity']])
+    print(reviews_df[['id', 'text', 'sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']])
 
-    # Save the results to a new Excel file
-    output_file_path = '/USElections2024_All_with_sentiment_TextBlob.xlsx'
-    reviews_df.to_excel(output_file_path, index=False)
+    # Save the results to a new CSV file
+    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_TextBlob.csv')
+    reviews_df.to_csv(output_file_path, index=False)
 
     print(f'Sentiment analysis results saved to {output_file_path}')
     return output_file_path
@@ -53,9 +52,8 @@ def vader_sentiment_analysis(input_file):
     # Download VADER lexicon
     nltk.download('vader_lexicon')
 
-    # Read the Excel file
-    # file_path = 'data/USElections2024_All2.xlsx'
-    reviews_df = pd.read_excel(input_file)
+    # Read the CSV file
+    reviews_df = pd.read_csv(input_file)
 
     # Check the structure of the DataFrame
     print(reviews_df.head())
@@ -83,16 +81,16 @@ def vader_sentiment_analysis(input_file):
         return sentiment, polarity, pos, neg, neu
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment', 'compound', 'pos', 'neg', 'neu']] = reviews_df['message'].apply(
+    reviews_df[['sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']] = reviews_df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
     # Print the results
-    print(reviews_df[['id', 'message', 'sentiment', 'compound', 'pos', 'neg', 'neu']])
+    print(reviews_df[['id', 'text', 'sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']])
 
-    # Save the results to a new Excel file
-    output_file_path = 'data/USElections2024_All3.xlsx'
-    reviews_df.to_excel(output_file_path, index=False)
+    # Save the results to a new CSV file
+    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_VADER.csv')
+    reviews_df.to_csv(output_file_path, index=False)
 
     print(f'Sentiment analysis results saved to {output_file_path}')
     return output_file_path
@@ -122,12 +120,12 @@ def BERT_sentiment_analysis(input_file):
         labels = [row[1] for row in csvreader if len(row) > 1]
 
     # Leer archivo CSV
-    df = pd.read_csv(input_file, encoding="latin1", sep=';')  # <-- cambia aquí el nombre de tu archivo
+    df = pd.read_csv(input_file, encoding="utf-8", sep=',')  # <-- cambia aquí el nombre de tu archivo
 
     # Clasificar cada mensaje
     results = []
 
-    for text in df["message"]:
+    for text in df["text"]:
         if pd.isna(text):
             results.append("undefined")
             continue
@@ -153,4 +151,6 @@ def BERT_sentiment_analysis(input_file):
     df["sentiment_BERT"] = results
 
     # Guardar resultado a nuevo CSV
-    df.to_csv("archivo_clasificado.csv", index=False)
+    output_file_path = './data/results/' + input_file.split('/')[-1].replace('.csv', '_BERT.csv')
+    df.to_csv(output_file_path, index=False)
+    return output_file_path

@@ -122,9 +122,9 @@ if __name__ == "__main__":
     output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_emotional_analysis_results.csv"
     process_csv(input_csv, output_csv, llm_chosen, justification, dataset)
  
-    #new_out_csv = libraries_call.TextBlob_sentiment_analysis(output_csv)
-    #new_out_csv = libraries_call.vader_sentiment_analysis(new_out_csv)
-    #new_out_csv = libraries_call.BERT_sentiment_analysis(new_out_csv)
+    new_out_csv = libraries_call.TextBlob_sentiment_analysis(output_csv)
+    new_out_csv = libraries_call.vader_sentiment_analysis(new_out_csv)
+    new_out_csv = libraries_call.BERT_sentiment_analysis(new_out_csv)
     #new_out_csv = metrics.calculate_majority(new_out_csv)
     #metrics.calculate_accuracy(new_out_csv)
     #metrics.interrated(new_out_csv)
