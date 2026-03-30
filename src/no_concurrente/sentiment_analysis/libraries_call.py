@@ -123,14 +123,25 @@ def BERT_sentiment_analysis(df):
     return df
 
 def NRCLex_emotion_analysis(df):
+    
     def analyze_emotion(text):
-        emotion = NRCLex(text)
+        # Guard clause: skip non-string/NaN rows
+        if not isinstance(text, str):
+            return 'neutral'
+            
+        emotion = NRCLex()
+        emotion.load_raw_text(text)
         top_emotions = emotion.top_emotions
+        
         if top_emotions:
             return top_emotions[0][0]  # Primary emotion
         else:
             return 'neutral'
-    
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+        nltk.download('wordnet')
     df['emotion_NRCLex'] = df['text'].apply(analyze_emotion)
     return df
 

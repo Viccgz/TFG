@@ -1,0 +1,6 @@
+id,text,emotion,sentiment_chatgpt,certainty_chatgpt,justification_chatgpt,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_emotion,processing_hour_emotion,sentiment_TextBlob,polarity_TextBlob,subjectivity_TextBlob,sentiment_VADER,compound_VADER,pos_VADER,neg_VADER,neu_VADER,sentiment_BERT
+eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,85%,,2026-03-30,16:58:46,joy,85%,,2026-03-30,16:58:47,=,0.0,0.0,=,0.0,0.0,0.0,1.0,+
+ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,85%,,2026-03-30,16:58:47,sadness,85%,,2026-03-30,16:58:48,+,0.04999999999999999,0.25,-,-0.3818,0.14,0.24,0.62,-
+eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,95%,,2026-03-30,16:58:49,anger,95%,,2026-03-30,16:58:49,-,-0.4,0.6,-,-0.5423,0.0,0.412,0.588,-
+ed7ypvh,To make her feel threatened,fear,negative,,,95%,,2026-03-30,16:58:50,fear,85%,,2026-03-30,16:58:50,=,0.0,0.0,-,-0.4588,0.0,0.429,0.571,-
+ed0bdzj,Dirty Southern Wankers,anger,negative,,,95%,,2026-03-30,16:58:51,disgust,85%,,2026-03-30,16:58:52,-,-0.3,0.4,-,-0.4404,0.0,0.592,0.408,-

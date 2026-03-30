@@ -1,0 +1,6 @@
+id,text,emotion,sentiment_chatgpt,certainty_chatgpt,justification_chatgpt,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_emotion,processing_hour_emotion
+eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,85%,,2026-03-30,16:58:46,joy,85%,,2026-03-30,16:58:47
+ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,85%,,2026-03-30,16:58:47,sadness,85%,,2026-03-30,16:58:48
+eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,95%,,2026-03-30,16:58:49,anger,95%,,2026-03-30,16:58:49
+ed7ypvh,To make her feel threatened,fear,negative,,,95%,,2026-03-30,16:58:50,fear,85%,,2026-03-30,16:58:50
+ed0bdzj,Dirty Southern Wankers,anger,negative,,,95%,,2026-03-30,16:58:51,disgust,85%,,2026-03-30,16:58:52
