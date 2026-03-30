@@ -167,6 +167,8 @@ def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
         scores = softmax(scores)
         label = labels[np.argmax(scores)]
         results.append(label)
-    
-    df["emotion_EmoRoBERTa"] = results
+    if library == "EmoRoBERTa":
+        df["emotion_EmoRoBERTa"] = results
+    elif library == "GoEmotions":        
+        df["emotion_GoEmotions"] = results
     return df
