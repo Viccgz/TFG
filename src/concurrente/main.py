@@ -1,3 +1,4 @@
+import time as timer
 import pandas as pd
 from pymongo import MongoClient
 import sentiment_analysis.llm_call as llm_call
@@ -5,65 +6,85 @@ import utils
 import sentiment_analysis.libraries_call as libraries_call
 import metrics
 
-n_items_used = 1
 
-def process_csv(input_csv, output_csv, llm_chosen, justification, source):
+def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
+    process_start_time = timer.perf_counter()
+
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
                                                   # EN: Change to the PC's which has the database IP if saving in another computer
-    DATABASE_NAME = llm_chosen + 'Results_EmotionalAnalysis'
-    COLLECTION_NAME = source + '_results'
+    DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
+    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results'
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
-    global n_items_used
 
-    df = pd.read_csv(input_csv, delimiter=";", encoding="utf-8")
-    for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen]:
+    df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
+    for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen, "total_process_time_seconds"]:
         if column not in df.columns:
-            df[column] = ""
-
+            df[column] = None
+    print("llm_chosen: ", llm_chosen)
     for index, row in df.iterrows():
-        date = row["date"]
-        time = row["time"]
-        source = row["source"]
-        message = row["message"]
+        id = row["id"]
+        message = row["text"]
+        emotion_raw = row["emotion"]
 
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_" + llm_chosen]) or pd.isnull(row["justification_" + llm_chosen]):
             if llm_chosen.upper() == 'CHATGPT':
-                sentiment, certainty, justification, date, time = llm_call.send_to_chatgpt(message, justification)
+                sentiment, certainty, justification, date, time = llm_call.send_to_chatgpt(message, justification, "sentiment_analysis", dataset)
             elif llm_chosen.upper() == 'GEMINI':
-                sentiment, certainty, justification, date, time = llm_call.send_to_gemini(message, justification)
+                sentiment, certainty, justification, date, time = llm_call.send_to_gemini(message, justification, "sentiment_analysis", dataset)
             elif llm_chosen.upper() == 'DEEPSEEK':
-                sentiment, certainty, justification, date, time = llm_call.send_to_deepseek(message, justification)
+                sentiment, certainty, justification, date, time = llm_call.send_to_deepseek(message, justification, "sentiment_analysis", dataset)
+            
             # ES: Actualizar el dataframe creando una nueva columna
             # EN: Update the dataframe creating a new column
             df.at[index, "sentiment_" + llm_chosen] = sentiment
-            df.at[index, "certainty_" + llm_chosen] = certainty
-            df.at[index, "justification_" + llm_chosen] = justification
-            df.at[index, "processing_date"] = date
-            df.at[index, "processing_hour"] = time
+            df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
+            df.at[index, "justification_sentiment_" + llm_chosen] = justification
+            df.at[index, "processing_date_sentiment"] = date
+            df.at[index, "processing_hour_sentiment"] = time
 
-        # ES: Guardar en MongoDB
-        # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time)
+            #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
+            #EN: Perform emotion analysis with LLMs for each message, and save the result
+            if llm_chosen.upper() == 'CHATGPT':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_chatgpt(message, justification, "emotion_analysis", dataset)
+            elif llm_chosen.upper() == 'GEMINI':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_gemini(message, justification, "emotion_analysis", dataset)
+            elif llm_chosen.upper() == 'DEEPSEEK':
+                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_deepseek(message, justification, "emotion_analysis", dataset)
+            
+            df.at[index, "emotion_" + llm_chosen] = emotion
+            df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
+            df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
+            df.at[index, "processing_date_emotion"] = date_emotion
+            df.at[index, "processing_hour_emotion"] = time_emotion
+
+            # ES: Guardar en MongoDB
+            # EN: Save in MongoDB
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
+
+    total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
+    df["total_process_time_seconds"] = total_process_time_seconds
+
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
+    print(f"Total process time: {total_process_time_seconds} seconds")
 
 
 if __name__ == "__main__":
     
     #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
-    source = input("Which dataset would you like to get analyzed?: ")
-    while source.upper() != 'X' and source.upper() != 'TELEGRAM':
-        source = input("Incorrect format, from which social network would you like to get the data? (X/Telegram): ")
+    dataset = input("Which dataset would you like to get analyzed? (ISEAR/GOEMOTIONS/KAGGLE/DEFAULT): ")
+    while dataset.upper() != 'ISEAR' and dataset.upper() != 'GOEMOTIONS' and dataset.upper() != 'KAGGLE' and dataset.upper() != 'DEFAULT':
+        dataset = input("Incorrect format, from which dataset would you like to get the data? (ISEAR/GOEMOTIONS/KAGGLE/DEFAULT): ")
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se ejecuta desde otro equipo
                                                   # EN: Change to the PC's which has the database IP if running from another computer
     DATABASE_NAME = 'Messages'
-    COLLECTION_NAME = source + '_messages'
+    COLLECTION_NAME = dataset + '_messages'
     client = MongoClient(MONGO_URI)
     data_base = client[DATABASE_NAME]
     colection = data_base[COLLECTION_NAME]
@@ -74,9 +95,15 @@ if __name__ == "__main__":
 
     # ES: Guardar el CSV en el directorio actual
     # EN: Save the CSV in the current directory
-    csv_filename = f"{COLLECTION_NAME}.csv"
-    df.to_csv(csv_filename, index=False)
-    print(f"CSV stored in: {csv_filename}")
+    if dataset.upper() == 'ISEAR':
+        csv_filename = "./data/processed/isear_emotions_normalized.csv"
+    elif dataset.upper() == 'GOEMOTIONS':
+        csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
+    elif dataset.upper() == 'KAGGLE':
+        csv_filename = "./data/processed/kaggle_emotions_normalized.csv"
+    else:
+        print("Using default CSV file (mini go emotions dataset).")
+        csv_filename = "./data/processed/default_emotions_normalized.csv"
 
     stringJustification = input("Would you like a justification of the sentiment analysis? (Y/N): ")
     valid_format = False
@@ -98,18 +125,38 @@ if __name__ == "__main__":
         else:
             llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
 
-    input_csv = csv_filename
-    output_csv = llm_chosen+"_results_"+source+"_emontional_analysis_results.csv"
-    process_csv(input_csv, output_csv, llm_chosen, justification, source)
-    new_out_csv = libraries_call.TextBlob_sentiment_analysis(output_csv)
-    new_out_csv = libraries_call.vader_sentiment_analysis(new_out_csv)
-    new_out_csv = libraries_call.BERT_sentiment_analysis(new_out_csv)
-    new_out_csv = metrics.calculate_majority(new_out_csv)
-    metrics.calculate_accuracy(new_out_csv)
-    metrics.interrated(new_out_csv)
-    metrics.calculateStatisticalDiff(new_out_csv)
-    metrics.calculateSummarySentimentLLMs(new_out_csv)
-    metrics.calculateStatisticsSentiment(new_out_csv)
-    metrics.carryOutTextAnalysis(new_out_csv)
+    output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
+    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
+ 
+    # Load the CSV with LLM results
+    df = pd.read_csv(output_csv)
+    
+    # Perform sentiment analysis with libraries
+    df = libraries_call.TextBlob_sentiment_analysis(df)
+    df = libraries_call.vader_sentiment_analysis(df)
+    df = libraries_call.BERT_sentiment_analysis(df)
+    
+    # Save sentiment analysis results
+    sentiment_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_analysis_results.csv"
+    df.to_csv(sentiment_csv, index=False)
+    print(f"Sentiment analysis results saved to {sentiment_csv}")
+    
+    # Perform emotion analysis with libraries
+    df = libraries_call.NRCLex_emotion_analysis(df)
+    df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
+    df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
+    
+    # Save emotion analysis results
+    emotion_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_emotion_analysis_results.csv"
+    df.to_csv(emotion_csv, index=False)
+    print(f"Emotion analysis results saved to {emotion_csv}")
+    
+    #new_out_csv = metrics.calculate_majority(new_out_csv)
+    #metrics.calculate_accuracy(new_out_csv)
+    #metrics.interrated(new_out_csv)
+    #metrics.calculateStatisticalDiff(new_out_csv)
+    #metrics.calculateSummarySentimentLLMs(new_out_csv)
+    #metrics.calculateStatisticsSentiment(new_out_csv)
+    #metrics.carryOutTextAnalysis(new_out_csv)
     print("All processes completed successfully.")
     

@@ -1,3 +1,4 @@
+import time as timer
 import pandas as pd
 from pymongo import MongoClient
 import sentiment_analysis.llm_call as llm_call
@@ -7,6 +8,8 @@ import metrics
 
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
+    process_start_time = timer.perf_counter()
+
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
                                                   # EN: Change to the PC's which has the database IP if saving in another computer
     DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
@@ -16,7 +19,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     collection = db[COLLECTION_NAME]
 
     df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
-    for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen]:
+    for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen, "total_process_time_seconds"]:
         if column not in df.columns:
             df[column] = None
     print("llm_chosen: ", llm_chosen)
@@ -61,10 +64,12 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
             utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
-            
+
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
+    return process_start_time
+    
 
 
 if __name__ == "__main__":
@@ -119,7 +124,7 @@ if __name__ == "__main__":
             llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
 
     output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
-    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
+    process_start_time = process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
  
     # Load the CSV with LLM results
     df = pd.read_csv(output_csv)
@@ -151,5 +156,9 @@ if __name__ == "__main__":
     #metrics.calculateSummarySentimentLLMs(new_out_csv)
     #metrics.calculateStatisticsSentiment(new_out_csv)
     #metrics.carryOutTextAnalysis(new_out_csv)
+    
+    total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
+    df["total_process_time_seconds"] = total_process_time_seconds
+    print(f"Total process time: {total_process_time_seconds} seconds")
     print("All processes completed successfully.")
     

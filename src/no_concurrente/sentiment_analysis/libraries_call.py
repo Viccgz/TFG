@@ -153,7 +153,6 @@ def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL)
     
-    # Get labels
     labels = model.config.id2label
     
     results = []

@@ -138,3 +138,169 @@
 
 [16:58:52] Parsed response - Emotion: disgust, Certainty: 85%, Justification: , Processing_date: 2026-03-30, Processing_hour: 16:58:52
 
+[12:13:46] ChatGPT's raw response:
+{"sentiment": "positive", "certainty": "90%"}
+[12:13:46] ChatGPT's sanitized response:
+{"sentiment": "positive", "certainty": "90%"}
+[12:13:46] chatgpt's sanitized response:
+{"sentiment": "positive", "certainty": "90%"}
+[12:13:46] Sentiment: positive
+
+[12:13:46] Certainty: 90%
+
+[12:13:46] Justification: 
+
+[12:13:46] Parsed response - Sentiment: positive, Certainty: 90%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:13:46
+
+[12:13:59] ChatGPT's raw response:
+I can't see the list of allowed emotions — the prompt contains the placeholder "{emotions_str}" instead of the actual categories. Please provide the exact list of emotions you want me to choose from. Once you supply that, I'll return a JSON object exactly in the format you requested.
+
+If helpful, based on the sentence alone ("My favourite food is anything I didn't have to cook myself."), a plausible single emotion would be "contentment" or "relief" (about not having to cook), but I won't choose one until you confirm the permitted emotions.
+[12:13:59] ChatGPT's sanitized response:
+I can't see the list of allowed emotions — the prompt contains the placeholder "{emotions_str}" instead of the actual categories. Please provide the exact list of emotions you want me to choose from. Once you supply that, I'll return a JSON object exactly in the format you requested.
+
+If helpful, based on the sentence alone ("My favourite food is anything I didn't have to cook myself."), a plausible single emotion would be "contentment" or "relief" (about not having to cook), but I won't choose one until you confirm the permitted emotions.
+[12:13:59] chatgpt's sanitized response:
+I can't see the list of allowed emotions — the prompt contains the placeholder "{emotions_str}" instead of the actual categories. Please provide the exact list of emotions you want me to choose from. Once you supply that, I'll return a JSON object exactly in the format you requested.
+
+If helpful, based on the sentence alone ("My favourite food is anything I didn't have to cook myself."), a plausible single emotion would be "contentment" or "relief" (about not having to cook), but I won't choose one until you confirm the permitted emotions.
+[12:17:10] ChatGPT's raw response:
+{"sentiment": "positive", "certainty": "95%"}
+[12:17:10] ChatGPT's sanitized response:
+{"sentiment": "positive", "certainty": "95%"}
+[12:17:10] chatgpt's sanitized response:
+{"sentiment": "positive", "certainty": "95%"}
+[12:17:10] Sentiment: positive
+
+[12:17:10] Certainty: 95%
+
+[12:17:10] Justification: 
+
+[12:17:10] Parsed response - Sentiment: positive, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:10
+
+[12:17:15] ChatGPT's raw response:
+{"emotion": "joy", "certainty": "85%"}
+[12:17:15] ChatGPT's sanitized response:
+{"emotion": "joy", "certainty": "85%"}
+[12:17:15] chatgpt's sanitized response:
+{"emotion": "joy", "certainty": "85%"}
+[12:17:15] Emotion: joy
+
+[12:17:15] Certainty: 85%
+
+[12:17:15] Justification: 
+
+[12:17:15] Parsed response - Emotion: joy, Certainty: 85%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:15
+
+[12:17:19] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:19] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:19] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:19] Sentiment: negative
+
+[12:17:19] Certainty: 95%
+
+[12:17:19] Justification: 
+
+[12:17:19] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:19
+
+[12:17:22] ChatGPT's raw response:
+{"emotion": "anger", "certainty": "85%"}
+[12:17:22] ChatGPT's sanitized response:
+{"emotion": "anger", "certainty": "85%"}
+[12:17:22] chatgpt's sanitized response:
+{"emotion": "anger", "certainty": "85%"}
+[12:17:22] Emotion: anger
+
+[12:17:22] Certainty: 85%
+
+[12:17:22] Justification: 
+
+[12:17:22] Parsed response - Emotion: anger, Certainty: 85%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:22
+
+[12:17:24] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:24] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:24] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:24] Sentiment: negative
+
+[12:17:24] Certainty: 95%
+
+[12:17:24] Justification: 
+
+[12:17:24] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:24
+
+[12:17:29] ChatGPT's raw response:
+{"emotion": "anger", "certainty": "95%"}
+[12:17:29] ChatGPT's sanitized response:
+{"emotion": "anger", "certainty": "95%"}
+[12:17:29] chatgpt's sanitized response:
+{"emotion": "anger", "certainty": "95%"}
+[12:17:29] Emotion: anger
+
+[12:17:29] Certainty: 95%
+
+[12:17:29] Justification: 
+
+[12:17:29] Parsed response - Emotion: anger, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:29
+
+[12:17:33] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "90%"}
+[12:17:33] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "90%"}
+[12:17:33] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "90%"}
+[12:17:33] Sentiment: negative
+
+[12:17:33] Certainty: 90%
+
+[12:17:33] Justification: 
+
+[12:17:33] Parsed response - Sentiment: negative, Certainty: 90%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:33
+
+[12:17:38] ChatGPT's raw response:
+{"emotion": "fear", "certainty": "95%"}
+[12:17:38] ChatGPT's sanitized response:
+{"emotion": "fear", "certainty": "95%"}
+[12:17:38] chatgpt's sanitized response:
+{"emotion": "fear", "certainty": "95%"}
+[12:17:38] Emotion: fear
+
+[12:17:38] Certainty: 95%
+
+[12:17:38] Justification: 
+
+[12:17:38] Parsed response - Emotion: fear, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:38
+
+[12:17:42] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:42] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:42] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[12:17:42] Sentiment: negative
+
+[12:17:42] Certainty: 95%
+
+[12:17:42] Justification: 
+
+[12:17:42] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:42
+
+[12:17:46] ChatGPT's raw response:
+{"emotion": "disgust", "certainty": "95%"}
+[12:17:46] ChatGPT's sanitized response:
+{"emotion": "disgust", "certainty": "95%"}
+[12:17:46] chatgpt's sanitized response:
+{"emotion": "disgust", "certainty": "95%"}
+[12:17:46] Emotion: disgust
+
+[12:17:46] Certainty: 95%
+
+[12:17:46] Justification: 
+
+[12:17:46] Parsed response - Emotion: disgust, Certainty: 95%, Justification: , Processing_date: 2026-03-31, Processing_hour: 12:17:46
+

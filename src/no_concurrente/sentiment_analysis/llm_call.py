@@ -34,7 +34,7 @@ sentiment_not_justify_prompt = "Return the result as a JSON object with the foll
 unique_emotions = sorted(list(set(EMOTION_MAP.values())))
 emotions_str = ", ".join(unique_emotions)
 
-emotion_prompt = "From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
+emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
 emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
 emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
 
@@ -49,7 +49,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset):
     # ES: Generar respuesta inicial de ChatGPT
     # EN: Generate initial ChatGPT response
     response = openai.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini-2025-08-07",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)) 
