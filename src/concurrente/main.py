@@ -5,9 +5,12 @@ import sentiment_analysis.llm_call as llm_call
 import utils
 import sentiment_analysis.libraries_call as libraries_call
 import metrics
+import concurrent.futures
+import threading
+import os
 
 
-def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
+def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_threads=8):
     process_start_time = timer.perf_counter()
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
@@ -23,7 +26,11 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
         if column not in df.columns:
             df[column] = None
     print("llm_chosen: ", llm_chosen)
-    for index, row in df.iterrows():
+
+    # Lock para acceso exclusivo al DataFrame
+    df_lock = threading.Lock()
+
+    def process_row(index, row):
         id = row["id"]
         message = row["text"]
         emotion_raw = row["emotion"]
@@ -38,14 +45,6 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             elif llm_chosen.upper() == 'DEEPSEEK':
                 sentiment, certainty, justification, date, time = llm_call.send_to_deepseek(message, justification, "sentiment_analysis", dataset)
             
-            # ES: Actualizar el dataframe creando una nueva columna
-            # EN: Update the dataframe creating a new column
-            df.at[index, "sentiment_" + llm_chosen] = sentiment
-            df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
-            df.at[index, "justification_sentiment_" + llm_chosen] = justification
-            df.at[index, "processing_date_sentiment"] = date
-            df.at[index, "processing_hour_sentiment"] = time
-
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             if llm_chosen.upper() == 'CHATGPT':
@@ -55,23 +54,34 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             elif llm_chosen.upper() == 'DEEPSEEK':
                 emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_deepseek(message, justification, "emotion_analysis", dataset)
             
-            df.at[index, "emotion_" + llm_chosen] = emotion
-            df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
-            df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
-            df.at[index, "processing_date_emotion"] = date_emotion
-            df.at[index, "processing_hour_emotion"] = time_emotion
+            # Usar lock para actualizar el DataFrame
+            with df_lock:
+                df.at[index, "sentiment_" + llm_chosen] = sentiment
+                df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
+                df.at[index, "justification_sentiment_" + llm_chosen] = justification
+                df.at[index, "processing_date_sentiment"] = date
+                df.at[index, "processing_hour_sentiment"] = time
+                df.at[index, "emotion_" + llm_chosen] = emotion
+                df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
+                df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
+                df.at[index, "processing_date_emotion"] = date_emotion
+                df.at[index, "processing_hour_emotion"] = time_emotion
 
-            # ES: Guardar en MongoDB
-            # EN: Save in MongoDB
+            # ES: Guardar en MongoDB (pymongo es thread-safe)
+            # EN: Save in MongoDB (pymongo is thread-safe)
             utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
 
-    total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
-    df["total_process_time_seconds"] = total_process_time_seconds
+    # Procesar filas concurrentemente
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = [executor.submit(process_row, index, row) for index, row in df.iterrows()]
+        for future in concurrent.futures.as_completed(futures):
+            future.result()  # Esperar a que termine, aunque no hay excepciones manejadas
 
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
-    print(f"Total process time: {total_process_time_seconds} seconds")
+    return process_start_time
+    
 
 
 if __name__ == "__main__":
@@ -126,7 +136,9 @@ if __name__ == "__main__":
             llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
 
     output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
-    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
+    num_threads = 8  # Sugerido para I/O bound operations como llamadas a LLM
+    print(f"Using {num_threads} threads for concurrent processing.")
+    process_start_time = process_csv(csv_filename, output_csv, llm_chosen, justification, dataset, num_threads)
  
     # Load the CSV with LLM results
     df = pd.read_csv(output_csv)
@@ -158,5 +170,9 @@ if __name__ == "__main__":
     #metrics.calculateSummarySentimentLLMs(new_out_csv)
     #metrics.calculateStatisticsSentiment(new_out_csv)
     #metrics.carryOutTextAnalysis(new_out_csv)
+    
+    total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
+    df["total_process_time_seconds"] = total_process_time_seconds
+    print(f"Total process time: {total_process_time_seconds} seconds")
     print("All processes completed successfully.")
     

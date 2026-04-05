@@ -9,15 +9,9 @@ from scipy.special import softmax
 import numpy as np
 import urllib.request
 import csv
+from nrclex import NRCLex
 
-def TextBlob_sentiment_analysis(input_file):
-    # Read the Excel file
-    #file_path = 'data/USElections2024_All.xlsx'
-    reviews_df = pd.read_csv(input_file)
-
-    # Check the structure of the DataFrame
-    print(reviews_df.head())
-
+def TextBlob_sentiment_analysis(df):
     # Function to analyze sentiment and return polarity and subjectivity
     def analyze_sentiment(text):
         analysis = TextBlob(text)
@@ -35,30 +29,15 @@ def TextBlob_sentiment_analysis(input_file):
         return sentiment, polarity, subjectivity
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment', 'polarity', 'subjectivity']] = reviews_df['message'].apply(
+    df[['sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
-    # Print the results
-    print(reviews_df[['id', 'message', 'sentiment', 'polarity', 'subjectivity']])
+    return df
 
-    # Save the results to a new Excel file
-    output_file_path = '/USElections2024_All_with_sentiment_TextBlob.xlsx'
-    reviews_df.to_excel(output_file_path, index=False)
-
-    print(f'Sentiment analysis results saved to {output_file_path}')
-    return output_file_path
-
-def vader_sentiment_analysis(input_file):
+def vader_sentiment_analysis(df):
     # Download VADER lexicon
     nltk.download('vader_lexicon')
-
-    # Read the Excel file
-    # file_path = 'data/USElections2024_All2.xlsx'
-    reviews_df = pd.read_excel(input_file)
-
-    # Check the structure of the DataFrame
-    print(reviews_df.head())
 
     # Initialize the VADER sentiment intensity analyzer
     sia = SentimentIntensityAnalyzer()
@@ -83,21 +62,13 @@ def vader_sentiment_analysis(input_file):
         return sentiment, polarity, pos, neg, neu
 
     # Apply sentiment analysis to the text column
-    reviews_df[['sentiment', 'compound', 'pos', 'neg', 'neu']] = reviews_df['message'].apply(
+    df[['sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
 
-    # Print the results
-    print(reviews_df[['id', 'message', 'sentiment', 'compound', 'pos', 'neg', 'neu']])
+    return df
 
-    # Save the results to a new Excel file
-    output_file_path = 'data/USElections2024_All3.xlsx'
-    reviews_df.to_excel(output_file_path, index=False)
-
-    print(f'Sentiment analysis results saved to {output_file_path}')
-    return output_file_path
-
-def BERT_sentiment_analysis(input_file):
+def BERT_sentiment_analysis(df):
     # Preprocesamiento del texto
     def preprocess(text):
         new_text = []
@@ -121,13 +92,10 @@ def BERT_sentiment_analysis(input_file):
         csvreader = csv.reader(html, delimiter='\t')
         labels = [row[1] for row in csvreader if len(row) > 1]
 
-    # Leer archivo CSV
-    df = pd.read_csv(input_file, encoding="latin1", sep=';')  # <-- cambia aquí el nombre de tu archivo
-
     # Clasificar cada mensaje
     results = []
 
-    for text in df["message"]:
+    for text in df["text"]:
         if pd.isna(text):
             results.append("undefined")
             continue
@@ -152,5 +120,54 @@ def BERT_sentiment_analysis(input_file):
     # Añadir columna de sentimiento
     df["sentiment_BERT"] = results
 
-    # Guardar resultado a nuevo CSV
-    df.to_csv("archivo_clasificado.csv", index=False)
+    return df
+
+def NRCLex_emotion_analysis(df):
+    
+    def analyze_emotion(text):
+        # Guard clause: skip non-string/NaN rows
+        if not isinstance(text, str):
+            return 'neutral'
+            
+        emotion = NRCLex()
+        emotion.load_raw_text(text)
+        top_emotions = emotion.top_emotions
+        
+        if top_emotions:
+            return top_emotions[0][0]  # Primary emotion
+        else:
+            return 'neutral'
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+        nltk.download('wordnet')
+    df['emotion_NRCLex'] = df['text'].apply(analyze_emotion)
+    return df
+
+def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
+    if library == "EmoRoBERTa":
+        MODEL = "j-hartmann/emotion-english-distilroberta-base"
+    elif library == "GoEmotions":
+        MODEL = "monologg/bert-base-cased-goemotions-original"
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL)
+    
+    labels = model.config.id2label
+    
+    results = []
+    for text in df["text"]:
+        if pd.isna(text):
+            results.append("neutral")
+            continue
+        encoded_input = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+        output = model(**encoded_input)
+        scores = output[0][0].detach().numpy()
+        scores = softmax(scores)
+        label = labels[np.argmax(scores)]
+        results.append(label)
+    if library == "EmoRoBERTa":
+        df["emotion_EmoRoBERTa"] = results
+    elif library == "GoEmotions":        
+        df["emotion_GoEmotions"] = results
+    return df

@@ -3,6 +3,7 @@ import openai
 import utils
 import google.generativeai as genai
 from openai import OpenAI
+from dataset_preprocessing.emotion_mapper import EMOTION_MAP
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -22,17 +23,25 @@ modelGemini = genai.GenerativeModel("gemini-1.5-flash", generation_config=genera
 # EN: Deepseek API credentials
 clientDeepseek = OpenAI(api_key= config['deepseek_api_key'], base_url="https://api.deepseek.com")
 
-# ES: Pompts
-# EN: Prompts
-prompt = "From the data provided, classify the emotion the text as for example Happiness, sadness, anger, etc or indeterminable. The third key IS certainty, NOT certainly\n "
-justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
-not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
-reevaluate_prompt= "Reevaluate the emotion of this content. The initial evaluation was neutral or indeterminable. Use the text and the provided url of the image to help make a better decision.\n"
-    
+# ES: Pompts analisis de sentimiento
+# EN: Sentiment analysis prompts
+sentiment_prompt = "From the data provided, classify the sentiment of the text as positive, negative, or neutral. You must use the following values for the sentiment key: positive, negative, or neutral. The third key IS certainty, NOT certainly\n "
+sentiment_justify_prompt = "Return the result as a JSON object with the following keys: sentiment, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
+sentiment_not_justify_prompt = "Return the result as a JSON object with the following keys: sentiment and certainty. Format example: {\"sentiment\": \"positive\", \"certainty\": \"90%\"}\n "
+
+# ES: Pompts analisis de emociones
+# EN: Emotion analysis prompts
+unique_emotions = sorted(list(set(EMOTION_MAP.values())))
+emotions_str = ", ".join(unique_emotions)
+
+emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
+emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
+emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
+
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
-def send_to_chatgpt(text, justification):
+def send_to_chatgpt(text, justify, evaluation_mode, dataset):
     # ES: Credenciales de la API de ChatGPT
     # EN: ChatGPT API credentials
     openai.api_key = OPEN_AI_KEY_SECRET
@@ -40,79 +49,99 @@ def send_to_chatgpt(text, justification):
     # ES: Generar respuesta inicial de ChatGPT
     # EN: Generate initial ChatGPT response
     response = openai.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini-2025-08-07",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": (text + prompt + justify_prompt) if justification else (text + prompt + not_justify_prompt)
+                    {"role": "user", "content": ((text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)) 
+                           if evaluation_mode == "sentiment_analysis" else ((text + emotion_prompt + emotion_justify_prompt) if justify 
+                                                                      else (text + emotion_prompt + emotion_not_justify_prompt))
                     }
                 ],
                 stream=False
     )
     response_json = response.choices[0].message.content.strip()
-    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt") 
+    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt", dataset) 
 
     # ES: Verifico si la respuesta JSON no está vacía
     # EN: Check if the JSON response is not empty
     if not response_json:
-        utils.log_message("Null response received.", "chatgpt")
-        return 'NA'
+        utils.log_message("Null response received.", "chatgpt", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
         
     try:
-        utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt")
-        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt")
+        utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt", dataset)
+        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", evaluation_mode, dataset)
         return sentiment, certainty, justification, processing_date, processing_hour
 
-    except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "chatgpt")
-        return 'NA'
- 
-def send_to_deepseek(text, justification):
 
+    except json.JSONDecodeError as e:
+        utils.log_message(f"Error decoding JSON: {e}", "chatgpt", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
+ 
+def send_to_deepseek(text, justify, evaluation_mode, dataset):
+
+    # ES: Generar la respuesta inicial con Deepseek
+    # EN: Generate the initial response with Deepseek
     response = clientDeepseek.chat.completions.create(
         model="deepseek-reasoner",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": (text + prompt + justify_prompt) if justification else (text + prompt + not_justify_prompt)
+                    {"role": "user", "content": ((text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)) 
+                           if evaluation_mode == "sentiment_analysis" else ((text + emotion_prompt + emotion_justify_prompt) if justify 
+                                                                      else (text + emotion_prompt + emotion_not_justify_prompt))
                     }
                 ],
                 stream=False
     )
     output = response.choices[0].message.content.strip()
     
+    # ES: Verifico si la respuesta JSON no está vacía
+    # EN: Check if the JSON response is not empty
     if not output:
-        utils.log_message("Null response received.", "deepseek")
-        return 'NA'
+        utils.log_message("Null response received.", "deepseek", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
     try:
-        utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek")
-        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek")
-        return sentiment, certainty, justification, processing_date, processing_hour
+        # ES: Procesar la respuesta de Deepseek        
+        # # EN: Process the Deepseek response
+        utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek", dataset)
+        if justify:
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
+            return sentiment, certainty, justification, processing_date, processing_hour
+        else:
+            sentiment, certainty, _, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
+            return sentiment, certainty, processing_date, processing_hour
     
     except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "deepseek")
-        return 'NA'
+        utils.log_message(f"Error decoding JSON: {e}", "deepseek", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
-def send_to_gemini(text, justification):
+def send_to_gemini(text, justify, evaluation_mode, dataset):
     # ES: Generar la respuesta inicial con Gemini
     # EN: Generate the initial response with Gemini
     try:
-        if justification:
-            prompt = ( text + prompt + justify_prompt)
+        if evaluation_mode == "sentiment_analysis":
+            prompt = ( text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)
         else:
-            prompt = ( text + prompt + not_justify_prompt)
+            prompt = ( text + emotion_prompt + emotion_justify_prompt) if justify else (text + emotion_prompt + emotion_not_justify_prompt)
 
         response = modelGemini.generate_content(prompt).text.strip()
-        utils.log_message(f"Gemini's raw response:\n{response}", "gemini")
+        utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset)
         if not response:
-            utils.log_message("Null response received.", "gemini")
-            return 'NA'
-        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini")
-        return sentiment, certainty, justification, processing_date, processing_hour
+            utils.log_message("Null response received.", "gemini", dataset)
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
+        
+        if justify:
+            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
+            return sentiment, certainty, justification, processing_date, processing_hour
+        else:
+             sentiment, certainty, _, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
+             return sentiment, certainty, processing_date, processing_hour
 
     except json.JSONDecodeError as e:
-        utils.log_message(f"Error decoding JSON: {e}", "gemini")
-        return 'NA'
+        utils.log_message(f"Error decoding JSON: {e}", "gemini", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
     except Exception as e:
-        utils.log_message(f"Error processing response: {e}", "gemini")
-        return 'NA'
+        utils.log_message(f"Error processing response: {e}", "gemini", dataset)
+        return 'NA', 'NA', 'NA', 'NA', 'NA'
 
