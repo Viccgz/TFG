@@ -22,7 +22,8 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     collection = db[COLLECTION_NAME]
 
     df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
-    for column in ["sentiment_" + llm_chosen, "certainty_" + llm_chosen, "justification_" + llm_chosen, "total_process_time_seconds"]:
+    for column in ["sentiment_" + llm_chosen, "certainty_sentiment_" + llm_chosen, "justification_sentiment_" + llm_chosen, 
+                   "emotion_" + llm_chosen, "certainty_emotion_" + llm_chosen, "justification_emotion_" + llm_chosen]:
         if column not in df.columns:
             df[column] = None
     print("llm_chosen: ", llm_chosen)
@@ -30,14 +31,14 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     # Lock para acceso exclusivo al DataFrame
     df_lock = threading.Lock()
 
-    def process_row(index, row):
+    def process_row(index, row, justification):
         id = row["id"]
         message = row["text"]
         emotion_raw = row["emotion"]
 
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
-        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_" + llm_chosen]) or pd.isnull(row["justification_" + llm_chosen]):
+        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
             if llm_chosen.upper() == 'CHATGPT':
                 sentiment, certainty, justification, date, time = llm_call.send_to_chatgpt(message, justification, "sentiment_analysis", dataset)
             elif llm_chosen.upper() == 'GEMINI':
@@ -73,7 +74,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
     # Procesar filas concurrentemente
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = [executor.submit(process_row, index, row) for index, row in df.iterrows()]
+        futures = [executor.submit(process_row, index, row, justification) for index, row in df.iterrows()]
         for future in concurrent.futures.as_completed(futures):
             future.result()  # Esperar a que termine, aunque no hay excepciones manejadas
 
@@ -173,6 +174,29 @@ if __name__ == "__main__":
     
     total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
     df["total_process_time_seconds"] = total_process_time_seconds
+    
+    # Reordenar columnas en el orden especificado
+    order_base_columns = ["id", "text", "emotion", 
+                 "sentiment_" + llm_chosen, 
+                 "certainty_sentiment_" + llm_chosen, 
+                 "justification_sentiment_" + llm_chosen,
+                 "processing_date_sentiment", "processing_hour_sentiment",
+                 "emotion_" + llm_chosen,
+                 "certainty_emotion_" + llm_chosen,
+                 "justification_emotion_" + llm_chosen,
+                 "processing_date_emotion", "processing_hour_emotion"]
+    
+    # Obtener columnas de librerias (BERT, TextBlob, VADER, NRCLex) excluyendo _id
+    order_remaining_cols = [col for col in df.columns if col not in order_base_columns and col != "total_process_time_seconds" and col != "_id"]
+    
+    # Ordenar columnas finales: base + remaining + total_process_time_seconds
+    final_cols = order_base_columns + order_remaining_cols + ["total_process_time_seconds"]
+    # Filtrar solo columnas que existan en el dataframe
+    final_cols = [col for col in final_cols if col in df.columns]
+    df = df[final_cols]
+    
+    df.to_csv(emotion_csv, index=False)
+    
     print(f"Total process time: {total_process_time_seconds} seconds")
     print("All processes completed successfully.")
     
