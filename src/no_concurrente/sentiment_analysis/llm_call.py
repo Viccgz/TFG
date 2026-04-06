@@ -145,3 +145,33 @@ def send_to_gemini(text, justify, evaluation_mode, dataset):
         utils.log_message(f"Error processing response: {e}", "gemini", dataset)
         return 'NA', 'NA', 'NA', 'NA', 'NA'
 
+
+# ES: Registro de LLMs disponibles
+# EN: Registry of available LLMs
+# Para añadir un nuevo LLM:
+# 1. Añadir la clave API en config.json
+# 2. Implementar la función send_to_newllm(text, justify, evaluation_mode, dataset)
+# 3. Añadir 'NEWLLM': send_to_newllm al diccionario LLM_FUNCTIONS
+# 4. Si la clave API está presente, se añadirá automáticamente a AVAILABLE_LLMS
+#
+# To add a new LLM:
+# 1. Add the API key in config.json
+# 2. Implement the function send_to_newllm(text, justify, evaluation_mode, dataset)
+# 3. Add 'NEWLLM': send_to_newllm to the LLM_FUNCTIONS dictionary
+# 4. If the API key is present, it will be automatically added to AVAILABLE_LLMS
+LLM_FUNCTIONS = {
+    'CHATGPT': send_to_chatgpt,
+    'GEMINI': send_to_gemini,
+    'DEEPSEEK': send_to_deepseek
+}
+
+# ES: Lista de LLMs disponibles 
+# EN: List of available LLMs
+AVAILABLE_LLMS = []
+if config.get('OPEN_AI_KEY_SECRET'):
+    AVAILABLE_LLMS.append('CHATGPT')
+if config.get('genai_api_key'):
+    AVAILABLE_LLMS.append('GEMINI')
+if config.get('deepseek_api_key'):
+    AVAILABLE_LLMS.append('DEEPSEEK')
+

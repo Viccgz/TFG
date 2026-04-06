@@ -39,21 +39,13 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
-            if llm_chosen.upper() == 'CHATGPT':
-                sentiment, certainty, justification, date, time = llm_call.send_to_chatgpt(message, justification, "sentiment_analysis", dataset)
-            elif llm_chosen.upper() == 'GEMINI':
-                sentiment, certainty, justification, date, time = llm_call.send_to_gemini(message, justification, "sentiment_analysis", dataset)
-            elif llm_chosen.upper() == 'DEEPSEEK':
-                sentiment, certainty, justification, date, time = llm_call.send_to_deepseek(message, justification, "sentiment_analysis", dataset)
+            func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
+            sentiment, certainty, justification, date, time = func(message, justification, "sentiment_analysis", dataset)
             
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
-            if llm_chosen.upper() == 'CHATGPT':
-                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_chatgpt(message, justification, "emotion_analysis", dataset)
-            elif llm_chosen.upper() == 'GEMINI':
-                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_gemini(message, justification, "emotion_analysis", dataset)
-            elif llm_chosen.upper() == 'DEEPSEEK':
-                emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = llm_call.send_to_deepseek(message, justification, "emotion_analysis", dataset)
+            func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
+            emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset)
             
             # Usar lock para actualizar el DataFrame
             with df_lock:
@@ -128,13 +120,13 @@ if __name__ == "__main__":
         else:
             stringJustification = input("Incorrect format, would you like to get the sentiment classified? (Y/N): ")
     
-    llm_chosen = input("Which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
+    llm_chosen = input(f"Which LLM model would you like to use? ({'/'.join(llm_call.AVAILABLE_LLMS)}): ")
     valid_format = False
     while not valid_format:
-        if llm_chosen.upper() == 'CHATGPT' or llm_chosen.upper() == 'GEMINI' or llm_chosen.upper() == 'DEEPSEEK':
+        if llm_chosen.upper() in llm_call.AVAILABLE_LLMS:
             valid_format = True
         else:
-            llm_chosen = input("Incorrect format, which LLM model would you like to use? (ChatGPT/Gemini/Deepseek): ")
+            llm_chosen = input(f"Incorrect format, which LLM model would you like to use? ({'/'.join(llm_call.AVAILABLE_LLMS)}): ")
 
     output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
     num_threads = 8  # Sugerido para I/O bound operations como llamadas a LLM
