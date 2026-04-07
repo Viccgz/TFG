@@ -1,6 +1,6 @@
 id,text,emotion,sentiment_chatgpt,certainty_chatgpt,justification_chatgpt,total_process_time_seconds,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_emotion,processing_hour_emotion,sentiment_TextBlob,polarity_TextBlob,subjectivity_TextBlob,sentiment_VADER,compound_VADER,pos_VADER,neg_VADER,neu_VADER,sentiment_BERT
-eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,,90%,,2026-04-05,15:08:51,joy,90%,,2026-04-05,15:08:55,=,0.0,0.0,=,0.0,0.0,0.0,1.0,+
-ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,,95%,,2026-04-05,15:08:57,fear,85%,,2026-04-05,15:09:01,+,0.04999999999999999,0.25,-,-0.3818,0.14,0.24,0.62,-
-eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,,95%,,2026-04-05,15:09:04,anger,90%,,2026-04-05,15:09:08,-,-0.4,0.6,-,-0.5423,0.0,0.412,0.588,-
-ed7ypvh,To make her feel threatened,fear,negative,,,,95%,,2026-04-05,15:09:11,fear,90%,,2026-04-05,15:09:15,=,0.0,0.0,-,-0.4588,0.0,0.429,0.571,-
-ed0bdzj,Dirty Southern Wankers,anger,negative,,,,95%,,2026-04-05,15:09:17,disgust,95%,,2026-04-05,15:09:19,-,-0.3,0.4,-,-0.4404,0.0,0.592,0.408,-
+eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,,90%,,2026-04-06,17:23:36,joy,85%,,2026-04-06,17:23:41,=,0.0,0.0,=,0.0,0.0,0.0,1.0,+
+ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,,95%,,2026-04-06,17:23:45,fear,85%,,2026-04-06,17:23:53,+,0.04999999999999999,0.25,-,-0.3818,0.14,0.24,0.62,-
+eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,,95%,,2026-04-06,17:23:57,anger,95%,,2026-04-06,17:24:02,-,-0.4,0.6,-,-0.5423,0.0,0.412,0.588,-
+ed7ypvh,To make her feel threatened,fear,negative,,,,90%,,2026-04-06,17:24:05,fear,95%,,2026-04-06,17:24:11,=,0.0,0.0,-,-0.4588,0.0,0.429,0.571,-
+ed0bdzj,Dirty Southern Wankers,anger,negative,,,,95%,,2026-04-06,17:24:15,disgust,90%,,2026-04-06,17:24:20,-,-0.3,0.4,-,-0.4404,0.0,0.592,0.408,-
