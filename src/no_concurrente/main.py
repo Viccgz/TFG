@@ -117,26 +117,31 @@ if __name__ == "__main__":
 
     output_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_results.csv"
     process_start_time = process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
- 
-    # Load the CSV with LLM results
+    
+    # ES: Realizar análisis de sentimientos y emociones con bibliotecas, y guardar los resultados en el CSV
+    # EN: Load the CSV with LLM results
     df = pd.read_csv(output_csv)
     
-    # Perform sentiment analysis with libraries
+    # ES: Realizar análisis de sentimientos con bibliotecas
+    # EN: Perform sentiment analysis with libraries
     df = libraries_call.TextBlob_sentiment_analysis(df)
     df = libraries_call.vader_sentiment_analysis(df)
     df = libraries_call.BERT_sentiment_analysis(df)
     
-    # Save sentiment analysis results
+
+    # EN: Save sentiment analysis results
     sentiment_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_analysis_results.csv"
     df.to_csv(sentiment_csv, index=False)
     print(f"Sentiment analysis results saved to {sentiment_csv}")
     
-    # Perform emotion analysis with libraries
+    # ES: Realizar análisis de emociones con librerías
+    # EN: Perform emotion analysis with libraries
     df = libraries_call.NRCLex_emotion_analysis(df)
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
     
-    # Save emotion analysis results
+    # ES: Guardar los resultados del análisis de emociones con librerías
+    # EN: Save emotion analysis performed with libraries results 
     emotion_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_emotion_analysis_results.csv"
     df.to_csv(emotion_csv, index=False)
     print(f"Emotion analysis results saved to {emotion_csv}")
