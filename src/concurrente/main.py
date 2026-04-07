@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import sentiment_analysis.llm_call as llm_call
 import utils
 import sentiment_analysis.libraries_call as libraries_call
-import metrics
+#import metrics
 import concurrent.futures
 import threading
 import os
