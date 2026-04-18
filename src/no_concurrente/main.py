@@ -1,6 +1,7 @@
 import time as timer
 import pandas as pd
 from pymongo import MongoClient
+from dataset_preprocessing.emotion_mapper import normalize_emotion_label
 import sentiment_analysis.llm_call as llm_call
 import utils
 import sentiment_analysis.libraries_call as libraries_call
@@ -45,10 +46,9 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             function = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            emotion_raw, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = function(message, justification, "emotion_analysis", dataset)
+            emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = function(message, justification, "emotion_analysis", dataset)
             
-            df.at[index, "emotion_raw_" + llm_chosen] = emotion_raw
-            df.at[index, "emotion_" + llm_chosen] = emotion_mapped
+            df.at[index, "emotion_" + llm_chosen] = emotion
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
             df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
             df.at[index, "processing_date_emotion"] = date_emotion
@@ -56,7 +56,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
 
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
@@ -140,6 +140,11 @@ if __name__ == "__main__":
     df = libraries_call.NRCLex_emotion_analysis(df)
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
+    
+    # Map raw emotions from each library to normalized emotions using normalize_emotion_label
+    df["emotion_mapped_NRCLex"] = df["emotion_raw_NRCLex"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
+    df["emotion_mapped_EmoRoBERTa"] = df["emotion_raw_EmoRoBERTa"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
+    df["emotion_mapped_GoEmotions"] = df["emotion_raw_GoEmotions"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
     
     # ES: Guardar los resultados del análisis de emociones con librerías
     # EN: Save emotion analysis performed with libraries results 

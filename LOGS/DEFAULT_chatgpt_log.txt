@@ -1,280 +1,140 @@
-[17:15:40] ChatGPT's raw response:
+[17:38:48] ChatGPT's raw response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:40] ChatGPT's sanitized response:
+[17:38:48] ChatGPT's sanitized response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:40] chatgpt's sanitized response:
+[17:38:48] chatgpt's sanitized response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:40] Sentiment: negative
+[17:38:48] Sentiment: negative
 
-[17:15:40] Certainty: 95%
+[17:38:48] Certainty: 95%
 
-[17:15:40] Justification: 
+[17:38:48] Justification: 
 
-[17:15:40] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:40
+[17:38:48] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:48
 
-[17:15:40] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:15:40] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:15:40] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:15:40] Sentiment: negative
-
-[17:15:40] Certainty: 90%
-
-[17:15:40] Justification: 
-
-[17:15:40] Parsed response - Sentiment: negative, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:40
-
-[17:15:42] ChatGPT's raw response:
+[17:38:48] ChatGPT's raw response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:42] ChatGPT's sanitized response:
+[17:38:48] ChatGPT's sanitized response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:42] chatgpt's sanitized response:
+[17:38:48] chatgpt's sanitized response:
 {"sentiment": "negative", "certainty": "95%"}
-[17:15:42] Sentiment: negative
+[17:38:48] Sentiment: negative
 
-[17:15:42] Certainty: 95%
+[17:38:48] Certainty: 95%
 
-[17:15:42] Justification: 
+[17:38:48] Justification: 
 
-[17:15:42] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:42
+[17:38:48] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:48
 
-[17:15:43] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:15:43] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:15:43] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:15:43] Sentiment: negative
-
-[17:15:43] Certainty: 95%
-
-[17:15:43] Justification: 
-
-[17:15:43] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:43
-
-[17:15:44] ChatGPT's raw response:
+[17:38:49] ChatGPT's raw response:
 {"sentiment": "positive", "certainty": "90%"}
-[17:15:44] ChatGPT's sanitized response:
+[17:38:49] ChatGPT's sanitized response:
 {"sentiment": "positive", "certainty": "90%"}
-[17:15:44] chatgpt's sanitized response:
+[17:38:49] chatgpt's sanitized response:
 {"sentiment": "positive", "certainty": "90%"}
-[17:15:44] Sentiment: positive
+[17:38:49] Sentiment: positive
 
-[17:15:44] Certainty: 90%
+[17:38:49] Certainty: 90%
 
-[17:15:44] Justification: 
+[17:38:49] Justification: 
 
-[17:15:44] Parsed response - Sentiment: positive, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:44
+[17:38:49] Parsed response - Sentiment: positive, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:49
 
-[17:15:46] ChatGPT's raw response:
+[17:38:51] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] Sentiment: negative
+
+[17:38:51] Certainty: 95%
+
+[17:38:51] Justification: 
+
+[17:38:51] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:51
+
+[17:38:51] ChatGPT's raw response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] ChatGPT's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] chatgpt's sanitized response:
+{"sentiment": "negative", "certainty": "95%"}
+[17:38:51] Sentiment: negative
+
+[17:38:51] Certainty: 95%
+
+[17:38:51] Justification: 
+
+[17:38:51] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:51
+
+[17:38:51] ChatGPT's raw response:
 {"emotion": "fear", "certainty": "95%"}
-[17:15:46] ChatGPT's sanitized response:
+[17:38:51] ChatGPT's sanitized response:
 {"emotion": "fear", "certainty": "95%"}
-[17:15:46] chatgpt's sanitized response:
+[17:38:51] chatgpt's sanitized response:
 {"emotion": "fear", "certainty": "95%"}
-[17:15:46] Emotion: fear
+[17:38:51] Emotion: fear
 
-[17:15:46] Certainty: 95%
+[17:38:51] Certainty: 95%
 
-[17:15:46] Justification: 
+[17:38:51] Justification: 
 
-[17:15:46] Parsed response - Emotion: fear, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:46
+[17:38:51] Parsed response - Emotion: fear, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:51
 
-[17:15:47] ChatGPT's raw response:
-{"emotion": "disgust", "certainty": "95%"}
-[17:15:47] ChatGPT's sanitized response:
-{"emotion": "disgust", "certainty": "95%"}
-[17:15:47] chatgpt's sanitized response:
-{"emotion": "disgust", "certainty": "95%"}
-[17:15:47] Emotion: disgust
-
-[17:15:47] Certainty: 95%
-
-[17:15:47] Justification: 
-
-[17:15:47] Parsed response - Emotion: disgust, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:47
-
-[17:15:49] ChatGPT's raw response:
-{"emotion": "caring", "certainty": "85%"}
-[17:15:49] ChatGPT's sanitized response:
-{"emotion": "caring", "certainty": "85%"}
-[17:15:49] chatgpt's sanitized response:
-{"emotion": "caring", "certainty": "85%"}
-[17:15:49] Emotion: caring
-
-[17:15:49] Certainty: 85%
-
-[17:15:49] Justification: 
-
-[17:15:49] Parsed response - Emotion: caring, Certainty: 85%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:49
-
-[17:15:49] ChatGPT's raw response:
+[17:38:52] ChatGPT's raw response:
 {"emotion": "anger", "certainty": "95%"}
-[17:15:49] ChatGPT's sanitized response:
+[17:38:52] ChatGPT's raw response:
+{"emotion": "amusement", "certainty": "85%"}
+[17:38:52] ChatGPT's sanitized response:
 {"emotion": "anger", "certainty": "95%"}
-[17:15:49] chatgpt's sanitized response:
+[17:38:52] ChatGPT's sanitized response:
+{"emotion": "amusement", "certainty": "85%"}
+[17:38:52] chatgpt's sanitized response:
 {"emotion": "anger", "certainty": "95%"}
-[17:15:49] Emotion: anger
+[17:38:52] chatgpt's sanitized response:
+{"emotion": "amusement", "certainty": "85%"}
+[17:38:52] Emotion: anger
 
-[17:15:49] Certainty: 95%
+[17:38:52] Emotion: amusement
 
-[17:15:49] Justification: 
+[17:38:52] Certainty: 95%
 
-[17:15:49] Parsed response - Emotion: anger, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:49
+[17:38:52] Certainty: 85%
 
-[17:15:49] ChatGPT's raw response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:15:49] ChatGPT's sanitized response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:15:49] chatgpt's sanitized response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:15:49] Emotion: amusement
+[17:38:52] Justification: 
 
-[17:15:49] Certainty: 90%
+[17:38:52] Justification: 
 
-[17:15:49] Justification: 
+[17:38:52] Parsed response - Emotion: anger, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:52
 
-[17:15:49] Parsed response - Emotion: amusement, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:15:49
+[17:38:52] Parsed response - Emotion: amusement, Certainty: 85%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:52
 
-[17:18:43] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:18:43] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:18:43] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "90%"}
-[17:18:43] Sentiment: negative
-
-[17:18:43] Certainty: 90%
-
-[17:18:43] Justification: 
-
-[17:18:43] Parsed response - Sentiment: negative, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:43
-
-[17:18:43] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:43] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:43] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:43] Sentiment: negative
-
-[17:18:43] Certainty: 95%
-
-[17:18:43] Justification: 
-
-[17:18:43] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:43
-
-[17:18:44] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] Sentiment: negative
-
-[17:18:44] Certainty: 95%
-
-[17:18:44] Justification: 
-
-[17:18:44] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:44
-
-[17:18:44] ChatGPT's raw response:
-{"sentiment": "positive", "certainty": "95%"}
-[17:18:44] ChatGPT's sanitized response:
-{"sentiment": "positive", "certainty": "95%"}
-[17:18:44] chatgpt's sanitized response:
-{"sentiment": "positive", "certainty": "95%"}
-[17:18:44] Sentiment: positive
-
-[17:18:44] Certainty: 95%
-
-[17:18:44] Justification: 
-
-[17:18:44] Parsed response - Sentiment: positive, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:44
-
-[17:18:44] ChatGPT's raw response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] ChatGPT's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] chatgpt's sanitized response:
-{"sentiment": "negative", "certainty": "95%"}
-[17:18:44] Sentiment: negative
-
-[17:18:44] Certainty: 95%
-
-[17:18:44] Justification: 
-
-[17:18:44] Parsed response - Sentiment: negative, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:44
-
-[17:18:46] ChatGPT's raw response:
-{"emotion": "anger", "certainty": "90%"}
-[17:18:46] ChatGPT's sanitized response:
-{"emotion": "anger", "certainty": "90%"}
-[17:18:46] chatgpt's sanitized response:
-{"emotion": "anger", "certainty": "90%"}
-[17:18:46] Emotion: anger
-
-[17:18:46] Certainty: 90%
-
-[17:18:46] Justification: 
-
-[17:18:46] Parsed response - Emotion: anger, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:46
-
-[17:18:47] ChatGPT's raw response:
-{"emotion": "fear", "certainty": "95%"}
-[17:18:47] ChatGPT's sanitized response:
-{"emotion": "fear", "certainty": "95%"}
-[17:18:47] chatgpt's sanitized response:
-{"emotion": "fear", "certainty": "95%"}
-[17:18:47] Emotion: fear
-
-[17:18:47] Certainty: 95%
-
-[17:18:47] Justification: 
-
-[17:18:47] Parsed response - Emotion: fear, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:47
-
-[17:18:49] ChatGPT's raw response:
+[17:38:54] ChatGPT's raw response:
 {"emotion": "anger", "certainty": "95%"}
-[17:18:49] ChatGPT's sanitized response:
+[17:38:54] ChatGPT's sanitized response:
 {"emotion": "anger", "certainty": "95%"}
-[17:18:49] chatgpt's sanitized response:
+[17:38:54] chatgpt's sanitized response:
 {"emotion": "anger", "certainty": "95%"}
-[17:18:49] Emotion: anger
+[17:38:54] Emotion: anger
 
-[17:18:49] Certainty: 95%
+[17:38:54] Certainty: 95%
 
-[17:18:49] Justification: 
+[17:38:54] Justification: 
 
-[17:18:49] Parsed response - Emotion: anger, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:49
+[17:38:54] Parsed response - Emotion: anger, Certainty: 95%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:54
 
-[17:18:50] ChatGPT's raw response:
-{"emotion": "caring", "certainty": "85%"}
-[17:18:50] ChatGPT's sanitized response:
-{"emotion": "caring", "certainty": "85%"}
-[17:18:50] chatgpt's sanitized response:
-{"emotion": "caring", "certainty": "85%"}
-[17:18:50] Emotion: caring
+[17:38:56] ChatGPT's raw response:
+{"emotion": "sadness", "certainty": "85%"}
+[17:38:56] ChatGPT's sanitized response:
+{"emotion": "sadness", "certainty": "85%"}
+[17:38:56] chatgpt's sanitized response:
+{"emotion": "sadness", "certainty": "85%"}
+[17:38:56] Emotion: sadness
 
-[17:18:50] Certainty: 85%
+[17:38:56] Certainty: 85%
 
-[17:18:50] Justification: 
+[17:38:56] Justification: 
 
-[17:18:50] Parsed response - Emotion: caring, Certainty: 85%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:50
-
-[17:18:50] ChatGPT's raw response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:18:50] ChatGPT's sanitized response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:18:50] chatgpt's sanitized response:
-{"emotion": "amusement", "certainty": "90%"}
-[17:18:50] Emotion: amusement
-
-[17:18:50] Certainty: 90%
-
-[17:18:50] Justification: 
-
-[17:18:50] Parsed response - Emotion: amusement, Certainty: 90%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:18:50
+[17:38:56] Parsed response - Emotion: sadness, Certainty: 85%, Justification: , Processing_date: 2026-04-18, Processing_hour: 17:38:56
 

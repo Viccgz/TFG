@@ -7,6 +7,7 @@ import sentiment_analysis.libraries_call as libraries_call
 #import metrics
 import concurrent.futures
 import threading
+from dataset_preprocessing.emotion_mapper import normalize_emotion_label
 import os
 
 
@@ -152,6 +153,10 @@ if __name__ == "__main__":
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
     df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
     
+    # Map raw emotions from each library to normalized emotions using normalize_emotion_label
+    df["emotion_mapped_NRCLex"] = df["emotion_raw_NRCLex"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
+    df["emotion_mapped_EmoRoBERTa"] = df["emotion_raw_EmoRoBERTa"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
+    df["emotion_mapped_GoEmotions"] = df["emotion_raw_GoEmotions"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
     # Save emotion analysis results
     emotion_csv = "./data/results/" + llm_chosen + "_"+ dataset + "_sentiment_emotion_analysis_results.csv"
     df.to_csv(emotion_csv, index=False)

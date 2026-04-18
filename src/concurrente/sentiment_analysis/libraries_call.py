@@ -142,7 +142,7 @@ def NRCLex_emotion_analysis(df):
     except LookupError:
         nltk.download('punkt')
         nltk.download('wordnet')
-    df['emotion_NRCLex'] = df['text'].apply(analyze_emotion)
+    df['emotion_raw_NRCLex'] = df['text'].apply(analyze_emotion)
     return df
 
 def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
@@ -167,7 +167,7 @@ def GoEmotions_EmoRoBERTa_emotion_analysis(df, library):
         label = labels[np.argmax(scores)]
         results.append(label)
     if library == "EmoRoBERTa":
-        df["emotion_EmoRoBERTa"] = results
+        df["emotion_raw_EmoRoBERTa"] = results
     elif library == "GoEmotions":        
-        df["emotion_GoEmotions"] = results
+        df["emotion_raw_GoEmotions"] = results
     return df
