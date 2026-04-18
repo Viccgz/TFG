@@ -72,6 +72,19 @@ EMOTION_MAP = {
     "desire": "neutral"
 }
 
+def normalize_emotion_label(emotion_raw):
+    """
+    ES: Mapea una etiqueta de emoción raw a una emoción normalizada usando EMOTION_MAP
+    EN: Maps a raw emotion label to a normalized emotion using EMOTION_MAP
+    
+    Args:
+        emotion_raw: La emoción raw a mapear
+    
+    Returns:
+        La emoción mapeada. Si no existe en el mapa, devuelve "neutral"
+    """
+    return EMOTION_MAP.get(emotion_raw.lower(), "neutral")
+
 def normalize_go_emotions_labels(df):
     emotions = []
     ids_list = []

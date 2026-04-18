@@ -1,6 +1,6 @@
-id,text,emotion,sentiment_chatgpt,certainty_chatgpt,justification_chatgpt,total_process_time_seconds,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_emotion,processing_hour_emotion
-eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,,,,90%,,2026-04-06,17:23:36,joy,85%,,2026-04-06,17:23:41
-ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,,,,95%,,2026-04-06,17:23:45,fear,85%,,2026-04-06,17:23:53
-eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,,,,95%,,2026-04-06,17:23:57,anger,95%,,2026-04-06,17:24:02
-ed7ypvh,To make her feel threatened,fear,negative,,,,90%,,2026-04-06,17:24:05,fear,95%,,2026-04-06,17:24:11
-ed0bdzj,Dirty Southern Wankers,anger,negative,,,,95%,,2026-04-06,17:24:15,disgust,90%,,2026-04-06,17:24:20
+id,text,emotion,sentiment_chatgpt,certainty_sentiment_chatgpt,justification_sentiment_chatgpt,emotion_chatgpt,certainty_emotion_chatgpt,justification_emotion_chatgpt,processing_date_sentiment,processing_hour_sentiment,emotion_raw_chatgpt,processing_date_emotion,processing_hour_emotion
+eebbqej,My favourite food is anything I didn't have to cook myself.,neutral,positive,95%,,joy,90%,,2026-04-18,17:18:44,amusement,2026-04-18,17:18:50
+ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral,negative,95%,,love,85%,,2026-04-18,17:18:44,caring,2026-04-18,17:18:50
+eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger,negative,95%,,anger,95%,,2026-04-18,17:18:44,anger,2026-04-18,17:18:49
+ed7ypvh,To make her feel threatened,fear,negative,90%,,fear,95%,,2026-04-18,17:18:43,fear,2026-04-18,17:18:47
+ed0bdzj,Dirty Southern Wankers,anger,negative,95%,,anger,90%,,2026-04-18,17:18:43,anger,2026-04-18,17:18:46

@@ -45,7 +45,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset)
+            emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset)
             
             # Usar lock para actualizar el DataFrame
             with df_lock:
@@ -54,7 +54,8 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
                 df.at[index, "justification_sentiment_" + llm_chosen] = justification
                 df.at[index, "processing_date_sentiment"] = date
                 df.at[index, "processing_hour_sentiment"] = time
-                df.at[index, "emotion_" + llm_chosen] = emotion
+                df.at[index, "emotion_raw_" + llm_chosen] = emotion_raw_llm
+                df.at[index, "emotion_mapped_" + llm_chosen] = emotion_mapped
                 df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
                 df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
                 df.at[index, "processing_date_emotion"] = date_emotion
@@ -62,7 +63,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id)
 
     # Procesar filas concurrentemente
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -173,7 +174,8 @@ if __name__ == "__main__":
                  "certainty_sentiment_" + llm_chosen, 
                  "justification_sentiment_" + llm_chosen,
                  "processing_date_sentiment", "processing_hour_sentiment",
-                 "emotion_" + llm_chosen,
+                 "emotion_raw_" + llm_chosen,
+                 "emotion_mapped_" + llm_chosen,
                  "certainty_emotion_" + llm_chosen,
                  "justification_emotion_" + llm_chosen,
                  "processing_date_emotion", "processing_hour_emotion"]

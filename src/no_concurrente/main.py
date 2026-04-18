@@ -45,9 +45,10 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             function = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion = function(message, justification, "emotion_analysis", dataset)
+            emotion_raw, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = function(message, justification, "emotion_analysis", dataset)
             
-            df.at[index, "emotion_" + llm_chosen] = emotion
+            df.at[index, "emotion_raw_" + llm_chosen] = emotion_raw
+            df.at[index, "emotion_" + llm_chosen] = emotion_mapped
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
             df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
             df.at[index, "processing_date_emotion"] = date_emotion
@@ -55,7 +56,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
 
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)

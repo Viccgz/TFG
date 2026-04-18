@@ -3,7 +3,7 @@ import openai
 import utils
 import google.generativeai as genai
 from openai import OpenAI
-from dataset_preprocessing.emotion_mapper import EMOTION_MAP
+from dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS, normalize_emotion_label
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -31,8 +31,8 @@ sentiment_not_justify_prompt = "Return the result as a JSON object with the foll
 
 # ES: Pompts analisis de emociones
 # EN: Emotion analysis prompts
-unique_emotions = sorted(list(set(EMOTION_MAP.values())))
-emotions_str = ", ".join(unique_emotions)
+goemotions_labels = sorted(GO_EMOTIONS_LABELS)
+emotions_str = ", ".join(goemotions_labels)
 
 emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
 emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
@@ -66,17 +66,31 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset):
     # EN: Check if the JSON response is not empty
     if not response_json:
         utils.log_message("Null response received.", "chatgpt", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
         
     try:
         utils.log_message(f"ChatGPT's sanitized response:\n{response_json}", "chatgpt", dataset)
         sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response_json, "chatgpt", evaluation_mode, dataset)
-        return sentiment, certainty, justification, processing_date, processing_hour
+        
+        # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
+        # EN: If it's emotion analysis, map the emotion and return both
+        if evaluation_mode == "emotion_analysis":
+            emotion_raw = sentiment
+            emotion_mapped = normalize_emotion_label(emotion_raw)
+            return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
+        else:
+            return sentiment, certainty, justification, processing_date, processing_hour
 
 
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "chatgpt", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
  
 def send_to_deepseek(text, justify, evaluation_mode, dataset):
 
@@ -99,21 +113,31 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset):
     # EN: Check if the JSON response is not empty
     if not output:
         utils.log_message("Null response received.", "deepseek", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
     try:
         # ES: Procesar la respuesta de Deepseek        
         # # EN: Process the Deepseek response
         utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek", dataset)
-        if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
-            return sentiment, certainty, justification, processing_date, processing_hour
+        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
+        
+        # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
+        # EN: If it's emotion analysis, map the emotion and return both
+        if evaluation_mode == "emotion_analysis":
+            emotion_raw = sentiment
+            emotion_mapped = normalize_emotion_label(emotion_raw)
+            return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
         else:
-            sentiment, certainty, _, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset)
-            return sentiment, certainty, processing_date, processing_hour
+            return sentiment, certainty, justification, processing_date, processing_hour
     
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "deepseek", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
 def send_to_gemini(text, justify, evaluation_mode, dataset):
@@ -129,21 +153,34 @@ def send_to_gemini(text, justify, evaluation_mode, dataset):
         utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset)
         if not response:
             utils.log_message("Null response received.", "gemini", dataset)
-            return 'NA', 'NA', 'NA', 'NA', 'NA'
+            if evaluation_mode == "emotion_analysis":
+                return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+            else:
+                return 'NA', 'NA', 'NA', 'NA', 'NA'
         
-        if justify:
-            sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
-            return sentiment, certainty, justification, processing_date, processing_hour
+        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
+        
+        # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
+        # EN: If it's emotion analysis, map the emotion and return both
+        if evaluation_mode == "emotion_analysis":
+            emotion_raw = sentiment
+            emotion_mapped = normalize_emotion_label(emotion_raw)
+            return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
         else:
-             sentiment, certainty, _, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset)
-             return sentiment, certainty, processing_date, processing_hour
+            return sentiment, certainty, justification, processing_date, processing_hour
 
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "gemini", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
     except Exception as e:
         utils.log_message(f"Error processing response: {e}", "gemini", dataset)
-        return 'NA', 'NA', 'NA', 'NA', 'NA'
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
 # ES: Registro de LLMs disponibles
