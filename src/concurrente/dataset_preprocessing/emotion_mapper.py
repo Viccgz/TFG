@@ -1,5 +1,14 @@
 import pandas as pd
 import ast
+import os
+import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(os.path.dirname(current_dir))
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
+from concurrente.utils import sanitize_text
 
 GO_EMOTIONS_LABELS = [
     "admiration",
@@ -85,39 +94,54 @@ def normalize_emotion_label(emotion_raw):
     return EMOTION_MAP.get(emotion_raw.lower(), "neutral")
 
 def normalize_go_emotions_labels(df):
-    emotions = []
+    emotion_gts = []
+    emotion_gts_mapped = []
     ids_list = []
     texts = []
 
     for index, row in df.iterrows():
         ids = ast.literal_eval(row["labels"])
-        emotion = GO_EMOTIONS_LABELS[ids[0]]
-        mapped_emotion = EMOTION_MAP.get(emotion, "neutral")
-        emotions.append(mapped_emotion)
+        emotion_gt = GO_EMOTIONS_LABELS[ids[0]]
+        emotion_gt_mapped = EMOTION_MAP.get(emotion_gt, "neutral")
+        emotion_gts.append(emotion_gt)
+        emotion_gts_mapped.append(emotion_gt_mapped)
         ids_list.append(row["id"])
-        texts.append(row["text"])
+        texts.append(sanitize_text(row["text"]))
 
-    return pd.DataFrame({ "id": ids_list, "text": texts, "emotion": emotions })
+    return pd.DataFrame({
+        "id": ids_list,
+        "text": texts,
+        "emotion_gt": emotion_gts,
+        "emotion_gt_mapped": emotion_gts_mapped
+    })
 
 def normalize_isear_labels(df):
     return pd.DataFrame({
         "id": df["ID"],
-        "text": df["content"],
-        "emotion": df["sentiment"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
+        "text": df["content"].apply(sanitize_text),
+        "emotion_gt": df["sentiment"],
+        "emotion_gt_mapped": df["sentiment"].apply(lambda x: EMOTION_MAP.get(x, "neutral"))
     })
 
 def normalize_kaggle_emotions_labels(df):
-    id = 0
+    ids = []
     texts = []    
-    emotions = []
+    emotion_gts = []
+    emotion_gts_mapped = []
     for index, row in df.iterrows():
+        ids.append(index)
         text = row["text"]
-        emotion = row["emotion"]
-        mapped_emotion = EMOTION_MAP.get(emotion, "neutral")
-        texts.append(text)
-        emotions.append(mapped_emotion)
-        id += 1
-    return pd.DataFrame({"id": range(id), "text": texts, "emotion": emotions})
+        emotion_gt = row["emotion"]
+        emotion_gt_mapped = EMOTION_MAP.get(emotion_gt, "neutral")
+        texts.append(sanitize_text(text))
+        emotion_gts.append(emotion_gt)
+        emotion_gts_mapped.append(emotion_gt_mapped)
+    return pd.DataFrame({
+        "id": ids,
+        "text": texts,
+        "emotion_gt": emotion_gts,
+        "emotion_gt_mapped": emotion_gts_mapped
+    })
 
 def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
     goemotions_normalized = normalize_go_emotions_labels(goemotions_df)
