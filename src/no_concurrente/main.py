@@ -153,14 +153,6 @@ if __name__ == "__main__":
     df.to_csv(emotion_csv, index=False)
     print(f"Emotion analysis results saved to {emotion_csv}")
     
-    #new_out_csv = metrics.calculate_majority(new_out_csv)
-    #metrics.calculate_accuracy(new_out_csv)
-    #metrics.interrated(new_out_csv)
-    #metrics.calculateStatisticalDiff(new_out_csv)
-    #metrics.calculateSummarySentimentLLMs(new_out_csv)
-    #metrics.calculateStatisticsSentiment(new_out_csv)
-    #metrics.carryOutTextAnalysis(new_out_csv)
-    
     total_process_time_seconds = round(timer.perf_counter() - process_start_time, 4)
     df["total_process_time_seconds"] = total_process_time_seconds
     print(f"Total process time: {total_process_time_seconds} seconds")
