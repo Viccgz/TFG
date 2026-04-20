@@ -27,7 +27,8 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     for index, row in df.iterrows():
         id = row["id"]
         message = row["text"]
-        emotion_raw = row["emotion"]
+        emotion_raw_gt = row["emotion_gt"]
+        emotion_mapped_gt = row["emotion_gt_mapped"] 
 
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
@@ -56,7 +57,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id, emotion_raw_gt, emotion_mapped_gt)
 
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)

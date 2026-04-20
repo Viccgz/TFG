@@ -24,7 +24,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
     df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
     for column in ["sentiment_" + llm_chosen, "certainty_sentiment_" + llm_chosen, "justification_sentiment_" + llm_chosen, 
-                   "emotion_" + llm_chosen, "certainty_emotion_" + llm_chosen, "justification_emotion_" + llm_chosen]:
+                   "emotion_raw_" + llm_chosen,"emotion_mapped_" + llm_chosen, "certainty_emotion_" + llm_chosen, "justification_emotion_" + llm_chosen]:
         if column not in df.columns:
             df[column] = None
     print("llm_chosen: ", llm_chosen)
@@ -35,11 +35,12 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     def process_row(index, row, justification):
         id = row["id"]
         message = row["text"]
-        emotion_raw = row["emotion"]
+        emotion_raw_gt = row["emotion_gt"]
+        emotion_mapped_gt = row["emotion_gt_mapped"] 
 
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
-        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
+        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             sentiment, certainty, justification, date, time = func(message, justification, "sentiment_analysis", dataset)
             
@@ -64,7 +65,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
 
     # Procesar filas concurrentemente
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -174,11 +175,12 @@ if __name__ == "__main__":
     df["total_process_time_seconds"] = total_process_time_seconds
     
     # Reordenar columnas en el orden especificado
-    order_base_columns = ["id", "text", "emotion", 
+    order_base_columns = ["id", "text",
                  "sentiment_" + llm_chosen, 
                  "certainty_sentiment_" + llm_chosen, 
                  "justification_sentiment_" + llm_chosen,
                  "processing_date_sentiment", "processing_hour_sentiment",
+                 "emotion_gt", "emotion_gt_mapped",
                  "emotion_raw_" + llm_chosen,
                  "emotion_mapped_" + llm_chosen,
                  "certainty_emotion_" + llm_chosen,

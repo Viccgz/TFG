@@ -1,6 +1,10 @@
-id,text,emotion
-eebbqej,My favourite food is anything I didn't have to cook myself.,neutral
-ed00q6i,"Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead",neutral
-eezlygj,WHY THE FUCK IS BAYLESS ISOING,anger
-ed7ypvh,To make her feel threatened,fear
-ed0bdzj,Dirty Southern Wankers,anger
+id;text;emotion_gt;emotion_gt_mapped
+eebbqej;My favourite food is anything I didn't have to cook myself.;neutral;neutral
+ed00q6i;Now if he does off himself, everyone will think hes having a laugh screwing with people instead of actually dead;neutral;neutral
+eezlygj;WHY THE FUCK IS BAYLESS ISOING;anger;anger
+ed7ypvh;To make her feel threatened;fear;fear
+ed0bdzj;Dirty Southern Wankers;annoyance;anger
+edvnz26;OmG pEyToN iSn'T gOoD eNoUgH tO hElP uS iN tHe PlAyOfFs! Dumbass Broncos fans circa December 2015.;surprise;surprise
+ee3b6wu;Yes I heard abt the f bombs! That has to be why. Thanks for your reply ) until then hubby and I will anxiously wait 😝;gratitude;joy
+ef4qmod;We need more boards and to create a bit more space for [NAME]. Then we’ll be good.;desire;neutral
+ed8wbdn;Damn youtube and outrage drama is super lucrative for reddit;admiration;joy
