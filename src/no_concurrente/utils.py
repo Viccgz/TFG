@@ -31,7 +31,7 @@ def log_message(msg, llm, dataset):
 
 # ES: Función para guardar en MongoDB el resultado final
 # EN: Function to save the final result in MongoDB
-def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour, emotion, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw, id):
+def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour, emotion_mapped_llm, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt):
 
     #ES: Porcesar la justificacion de la respuesta y cambiar caracteres especiales
     #EN: Process the justification of the response and change special characters
@@ -44,13 +44,15 @@ def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justifi
     collection.insert_one({
             "id": id,
             "message": message,
-            "emotion_raw": emotion_raw,
+            "emotion_raw_gt": emotion_raw_gt,
+            "emotion_mapped_gt": emotion_mapped_gt,
             "sentiment": sentiment,
             "certainty": certainty,
             "justification": justification,
             "date": processing_date,
             "time": processing_hour,
-            "emotion": emotion,
+            "emotion_raw_llm": emotion_raw_llm,
+            "emotion_mapped_llm": emotion_mapped_llm,
             "certainty_emotion": certainty_emotion,
             "justification_emotion": justification_emotion,
             "date_emotion": date_emotion,

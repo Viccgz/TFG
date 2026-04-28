@@ -1,7 +1,13 @@
 import argparse
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 SENTIMENT_LABELS = ["negative", "neutral", "positive"]
 MAPPED_EMOTION_LABELS = ["joy", "sadness", "anger", "fear", "disgust", "surprise", "love", "neutral"]
@@ -126,20 +132,93 @@ def evaluate_fine_grained_emotions(df, pred_column, gt_column, labels=None):
     return metrics
 
 
-def save_metrics(result, prefix):
-    metrics_summary = {
+def _ensure_plot_backend():
+    if plt is None:
+        raise ImportError(
+            "matplotlib is required to generate plots. Install it with `pip install matplotlib`."
+        )
+
+
+def plot_per_class_metrics(result, prefix, show=False):
+    _ensure_plot_backend()
+    df = result["per_class"]
+    fig, ax = plt.subplots(figsize=(10, 6))
+    df.plot(kind="bar", ax=ax)
+    ax.set_title(f"Per-class metrics for {result.get('task')}")
+    ax.set_xlabel("Class")
+    ax.set_ylabel("Score")
+    ax.set_ylim(0, 1)
+    ax.legend(title="Metric")
+    fig.tight_layout()
+    filename = f"{prefix}_per_class.png"
+    fig.savefig(filename, bbox_inches="tight")
+    if show:
+        plt.show()
+    plt.close(fig)
+
+
+def plot_confusion_matrix(result, prefix, show=False):
+    _ensure_plot_backend()
+    cm = result["confusion_matrix"]
+    labels = list(cm.index)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    cax = ax.imshow(cm.values, interpolation="nearest", cmap="Blues")
+    ax.set_title(f"Confusion matrix for {result.get('task')}")
+    fig.colorbar(cax, ax=ax)
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_yticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("Actual")
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, cm.iat[i, j], ha="center", va="center", color="black")
+    fig.tight_layout()
+    filename = f"{prefix}_confusion_matrix.png"
+    fig.savefig(filename, bbox_inches="tight")
+    if show:
+        plt.show()
+    plt.close(fig)
+
+
+def plot_summary_metrics(result, prefix, show=False):
+    _ensure_plot_backend()
+    summary = {
+        "accuracy": result.get("accuracy"),
+        "macro_f1": result.get("macro_f1"),
+        "weighted_f1": result.get("weighted_f1")
+    }
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar(summary.keys(), summary.values(), color=["#4c72b0", "#55a868", "#c44e52"])
+    ax.set_ylim(0, 1)
+    ax.set_title(f"Summary metrics for {result.get('task')}")
+    ax.set_ylabel("Score")
+    for i, value in enumerate(summary.values()):
+        ax.text(i, value + 0.02, f"{value:.3f}", ha="center")
+    fig.tight_layout()
+    filename = f"{prefix}_summary.png"
+    fig.savefig(filename, bbox_inches="tight")
+    if show:
+        plt.show()
+    plt.close(fig)
+
+
+def save_plots(result, prefix, show=False):
+    plot_summary_metrics(result, prefix, show=show)
+    plot_per_class_metrics(result, prefix, show=show)
+    plot_confusion_matrix(result, prefix, show=show)
+
+
+def build_metrics_summary(result):
+    return pd.DataFrame([{
         "task": result.get("task"),
         "pred_column": result.get("pred_column"),
         "gt_column": result.get("gt_column"),
         "accuracy": result.get("accuracy"),
         "macro_f1": result.get("macro_f1"),
         "weighted_f1": result.get("weighted_f1")
-    }
-    summary_df = pd.DataFrame([metrics_summary])
-    summary_df.to_csv(f"{prefix}_summary.csv", index=False)
-    result["per_class"].to_csv(f"{prefix}_per_class.csv")
-    result["confusion_matrix"].to_csv(f"{prefix}_confusion_matrix.csv")
-    return summary_df
+    }])
 
 
 def print_metrics(result):
@@ -161,10 +240,20 @@ if __name__ == "__main__":
     parser.add_argument("--pred", required=True, help="Prediction column name")
     parser.add_argument("--gt", required=True, help="Ground truth column name")
     parser.add_argument("--task", choices=["sentiment", "mapped_emotions", "fine_grained_emotions"], default="sentiment")
-    parser.add_argument("--output-prefix", default="metrics", help="Prefix for saved metric CSV files")
+    parser.add_argument("--sep", default=None, help="CSV separator, e.g. ',' or ';' (auto-detect if omitted)")
+    parser.add_argument("--output-dir", default=None, help="Directory where plots will be saved. Defaults to data/results/no_concurrente/metrics/<dataset_name>.")
+    parser.add_argument("--output-prefix", default="metrics", help="Prefix for saved plot files")
+    parser.add_argument("--show", action="store_true", help="Display the generated plots interactively after saving them")
     args = parser.parse_args()
 
-    df = pd.read_csv(args.csv)
+    if args.sep:
+        df = pd.read_csv(args.csv, sep=args.sep)
+    else:
+        try:
+            df = pd.read_csv(args.csv)
+        except pd.errors.ParserError:
+            df = pd.read_csv(args.csv, sep=';')
+
     if args.task == "sentiment":
         result = evaluate_sentiment(df, args.pred, args.gt)
     elif args.task == "mapped_emotions":
@@ -172,5 +261,15 @@ if __name__ == "__main__":
     else:
         result = evaluate_fine_grained_emotions(df, args.pred, args.gt)
 
-    print_metrics(result)
-    save_metrics(result, args.output_prefix)
+    csv_path = Path(args.csv).resolve()
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    else:
+        project_root = Path(__file__).resolve().parents[2]
+        output_dir = project_root / "data" / "results" / "no_concurrente" / "metrics" / csv_path.stem
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    prefix = str(output_dir / args.output_prefix)
+
+    save_plots(result, prefix, show=args.show)
+    print(f"Saved plots in: {output_dir}")

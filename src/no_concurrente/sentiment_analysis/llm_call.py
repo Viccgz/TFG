@@ -16,7 +16,7 @@ OPEN_AI_KEY_SECRET = config['OPEN_AI_KEY_SECRET']
 # EN: Gemini API credentials
 genai.configure(api_key= config['genai_api_key'])
 generation_config = {"temperature": 0.9, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0}
-modelGemini = genai.GenerativeModel("gemini-1.5-flash", generation_config=generation_config)
+modelGemini = genai.GenerativeModel("gemini-2.5-flash", generation_config=generation_config)
 
 
 # ES: Credenciales de la API de Deepseek

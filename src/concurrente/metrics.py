@@ -241,7 +241,7 @@ if __name__ == "__main__":
     parser.add_argument("--gt", required=True, help="Ground truth column name")
     parser.add_argument("--task", choices=["sentiment", "mapped_emotions", "fine_grained_emotions"], default="sentiment")
     parser.add_argument("--sep", default=None, help="CSV separator, e.g. ',' or ';' (auto-detect if omitted)")
-    parser.add_argument("--output-dir", default=None, help="Directory where plots will be saved. Defaults to data/results/metrics/<dataset_name>.")
+    parser.add_argument("--output-dir", default=None, help="Directory where plots will be saved. Defaults to data/results/concurrente/metrics/<dataset_name>.")
     parser.add_argument("--output-prefix", default="metrics", help="Prefix for saved plot files")
     parser.add_argument("--show", action="store_true", help="Display the generated plots interactively after saving them")
     args = parser.parse_args()
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         output_dir = Path(args.output_dir)
     else:
         project_root = Path(__file__).resolve().parents[2]
-        output_dir = project_root / "data" / "results" / "metrics" / csv_path.stem
+        output_dir = project_root / "data" / "results" / "concurrente" / "metrics" / csv_path.stem
 
     output_dir.mkdir(parents=True, exist_ok=True)
     prefix = str(output_dir / args.output_prefix)
