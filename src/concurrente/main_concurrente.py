@@ -18,7 +18,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
                                                   # EN: Change to the PC's which has the database IP if saving in another computer
     DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
-    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results'
+    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results_concurrente'
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
@@ -43,12 +43,12 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            sentiment, certainty, justification, date, time = func(message, justification, "sentiment_analysis", dataset)
+            sentiment, certainty, justification, date, time = func(message, justification, "sentiment_analysis", dataset, id)
             
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset)
+            emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
             
             # Usar lock para actualizar el DataFrame
             with df_lock:
@@ -88,18 +88,6 @@ if __name__ == "__main__":
     while dataset.upper() != 'ISEAR' and dataset.upper() != 'GOEMOTIONS' and dataset.upper() != 'KAGGLE' and dataset.upper() != 'DEFAULT':
         dataset = input("Incorrect format, from which dataset would you like to get the data? (ISEAR/GOEMOTIONS/KAGGLE/DEFAULT): ")
 
-    MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se ejecuta desde otro equipo
-                                                  # EN: Change to the PC's which has the database IP if running from another computer
-    DATABASE_NAME = 'Messages'
-    COLLECTION_NAME = dataset + '_messages'
-    client = MongoClient(MONGO_URI)
-    data_base = client[DATABASE_NAME]
-    colection = data_base[COLLECTION_NAME]
-
-    cursor = colection.find()
-    documents = list(cursor)   
-    df = pd.DataFrame(documents)
-
     # ES: Guardar el CSV en el directorio actual
     # EN: Save the CSV in the current directory
     if dataset.upper() == 'ISEAR':
@@ -131,6 +119,18 @@ if __name__ == "__main__":
             valid_format = True
         else:
             llm_chosen = input(f"Incorrect format, which LLM model would you like to use? ({'/'.join(llm_call.AVAILABLE_LLMS)}): ")
+    
+    MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se ejecuta desde otro equipo
+                                                  # EN: Change to the PC's which has the database IP if running from another computer
+    DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
+    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results_concurrente'
+    client = MongoClient(MONGO_URI)
+    data_base = client[DATABASE_NAME]
+    colection = data_base[COLLECTION_NAME]
+
+    cursor = colection.find()
+    documents = list(cursor)   
+    df = pd.DataFrame(documents)
 
     output_csv = "./data/results/concurrente/" + llm_chosen + "_"+ dataset + "_results.csv"
     num_threads = 8  # Sugerido para I/O bound operations como llamadas a LLM

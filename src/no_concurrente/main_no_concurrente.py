@@ -14,7 +14,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
                                                   # EN: Change to the PC's which has the database IP if saving in another computer
     DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
-    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results'
+    COLLECTION_NAME = dataset + '_' + llm_chosen + '_results_no_concurrente'
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
@@ -34,7 +34,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]):
             function = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            sentiment, certainty, justification, date, time = function(message, justification, "sentiment_analysis", dataset)
+            sentiment, certainty, justification, date, time = function(message, justification, "sentiment_analysis", dataset, id)
 
             # ES: Actualizar el dataframe creando una nueva columna
             # EN: Update the dataframe creating a new column
@@ -47,7 +47,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset)
+            emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
             
             df.at[index, "emotion_" + llm_chosen] = emotion_mapped
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion

@@ -12,17 +12,17 @@ LOG_PLANTILLAS = {
     "deepseek": "LOGS/{dataset}_deepseek_log.txt"
 }
 
-def log_message(msg, llm, dataset):
+def log_message(msg, llm, dataset, id):
     template = LOG_PLANTILLAS.get(llm.lower())
     if not template:
-        print(f"Error: LLM '{llm}' invvalido")
+        print(f"Error: LLM '{llm}' invvalido con identificador {id}. No se registrará el mensaje: {msg}")
         return
     log_file_path = template.format(dataset=dataset.upper())
     os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     print(msg)
     try:
         with open(log_file_path, "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}\n")
+            f.write(f"[{datetime.now().strftime('%H:%M:%S')}] {msg} (ID: {id})\n")
     except Exception as e:
         print(f"No se pudo escribir en el log: {e}")
 
@@ -68,7 +68,8 @@ def sanitize_json(raw_json):
     try:
         # ES: Eliminar marcadores de bloque de código circundantes. Este problema surgio porque se devolvia el json con formato ```json y ``` alrededor, lo cual hacia que json.loads fallara
         # EN: Remove surrounding code block markers. This issue arose because the json was being returned with ```json and ``` around it which caused json.loads to fail
-        sanitized = re.sub(r'^```json|```$', '', raw_json.strip(), flags=re.MULTILINE).strip()
+        # sanitized = re.sub(r'^```json|```$', '', raw_json.strip(), flags=re.MULTILINE).strip()
+        sanitized = re.sub(r'^```(?:json)?\s*|\s*```$', '', raw_json.strip(), flags=re.IGNORECASE).strip()
         return sanitized
     except Exception as e:
         print(f"Error sanitizing JSON: {e}")
@@ -82,8 +83,10 @@ def sanitize_text(text):
 
 def parse_response(response, evaluation_mode, dataset, source):
     try:
-        sanitized_response = sanitize_json(response)
-        data = json.loads(sanitized_response)
+        if not response.strip():
+            log_message("Empty response after sanitization", source, dataset)
+            return "unknown", 0.0, "Empty response after sanitization"
+        data = json.loads(response)
         if evaluation_mode == "sentiment_analysis":
             sentiment = data.get("sentiment", "unknown")
             log_message(f"Sentiment: {sentiment}\n", source,dataset)
@@ -103,25 +106,28 @@ def parse_response(response, evaluation_mode, dataset, source):
 
         
     except json.JSONDecodeError as e:
-        log_message(f"Error decoding JSON: {e}")
+        log_message(f"Error decoding JSON: {e}", source, dataset)
         return "unknown", 0.0, "Error parsing response"
     
-def process_response(response, source, evaluation_mode, dataset):
+def process_response(response, source, evaluation_mode, dataset, id):
     try:
+        if not response.strip():
+            log_message("Empty response from llm", source, dataset, id)
+            return "unknown", 0.0, "Empty response from llm", "NA", "NA"
         sanitize_response = sanitize_json(response)
-        log_message(f"{source}'s sanitized response:\n{sanitize_response}", source, dataset)
+        log_message(f"{source}'s sanitized response:\n{sanitize_response}", source, dataset, id)
         processing_date = datetime.now().strftime("%Y-%m-%d")
         processing_hour = datetime.now().strftime("%H:%M:%S")
 
         if evaluation_mode == "sentiment_analysis":
             sentiment, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
-            log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset)  
+            log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset, id)  
             return sentiment, certainty, justification, processing_date, processing_hour 
         else:
             emotion, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
-            log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset)  
+            log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset, id)  
             return emotion, certainty, justification, processing_date, processing_hour  
     
     except json.JSONDecodeError as e:
-        log_message(f"Error decoding JSON: {e}")
+        log_message(f"Error decoding JSON: {e}", source, dataset, id)
         return 'NA', 'NA', 'NA', 'NA', 'NA'
