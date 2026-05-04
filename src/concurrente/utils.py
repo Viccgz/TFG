@@ -81,24 +81,24 @@ def sanitize_text(text):
     text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ").replace("&amp", "and ").replace("&", "and").replace(";", " ").replace(":", " ")
     return text
 
-def parse_response(response, evaluation_mode, dataset, source):
+def parse_response(response, evaluation_mode, dataset, source, id):
     try:
         if not response.strip():
-            log_message("Empty response after sanitization", source, dataset)
+            log_message("Empty response after sanitization", source, dataset, id)
             return "unknown", 0.0, "Empty response after sanitization"
         data = json.loads(response)
         if evaluation_mode == "sentiment_analysis":
             sentiment = data.get("sentiment", "unknown")
-            log_message(f"Sentiment: {sentiment}\n", source,dataset)
+            log_message(f"Sentiment: {sentiment}\n", source, dataset, id)
         else:
             emotion = data.get("emotion", "=")
-            log_message(f"Emotion: {emotion}\n", source, dataset)
+            log_message(f"Emotion: {emotion}\n", source, dataset, id)
 
         certainty = data.get("certainty", 0.0)
-        log_message(f"Certainty: {certainty}\n", source, dataset)
+        log_message(f"Certainty: {certainty}\n", source, dataset, id)
 
         justification = data.get("justification", "")
-        log_message(f"Justification: {justification}\n", source, dataset)
+        log_message(f"Justification: {justification}\n", source, dataset, id)
         if evaluation_mode == "sentiment_analysis":
             return sentiment, certainty, justification
         else:
@@ -106,7 +106,7 @@ def parse_response(response, evaluation_mode, dataset, source):
 
         
     except json.JSONDecodeError as e:
-        log_message(f"Error decoding JSON: {e}", source, dataset)
+        log_message(f"Error decoding JSON: {e}", source, dataset, id)
         return "unknown", 0.0, "Error parsing response"
     
 def process_response(response, source, evaluation_mode, dataset, id):
@@ -120,11 +120,11 @@ def process_response(response, source, evaluation_mode, dataset, id):
         processing_hour = datetime.now().strftime("%H:%M:%S")
 
         if evaluation_mode == "sentiment_analysis":
-            sentiment, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
+            sentiment, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source, id)
             log_message(f"Parsed response - Sentiment: {sentiment}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset, id)  
             return sentiment, certainty, justification, processing_date, processing_hour 
         else:
-            emotion, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source)
+            emotion, certainty, justification = parse_response(sanitize_response, evaluation_mode, dataset, source, id)
             log_message(f"Parsed response - Emotion: {emotion}, Certainty: {certainty}, Justification: {justification}, Processing_date: {processing_date}, Processing_hour: {processing_hour}\n", source, dataset, id)  
             return emotion, certainty, justification, processing_date, processing_hour  
     

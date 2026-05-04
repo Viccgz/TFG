@@ -41,7 +41,7 @@ emotion_not_justify_prompt = "Return the result as a JSON object with the follow
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
-def send_to_chatgpt(text, justify, evaluation_mode, dataset):
+def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
     # ES: Credenciales de la API de ChatGPT
     # EN: ChatGPT API credentials
     openai.api_key = OPEN_AI_KEY_SECRET
@@ -92,7 +92,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset):
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
  
-def send_to_deepseek(text, justify, evaluation_mode, dataset):
+def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
 
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
@@ -140,7 +140,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset):
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
-def send_to_gemini(text, justify, evaluation_mode, dataset):
+def send_to_gemini(text, justify, evaluation_mode, dataset, id):
     # ES: Generar la respuesta inicial con Gemini
     # EN: Generate the initial response with Gemini
     try:
