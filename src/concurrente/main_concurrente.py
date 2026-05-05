@@ -43,7 +43,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            sentiment, certainty, justification, date, time = func(message, justification, "sentiment_analysis", dataset, id)
+            sentiment, certainty, justification_sentiment, date, time = func(message, justification, "sentiment_analysis", dataset, id)
             
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
@@ -54,7 +54,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
             with df_lock:
                 df.at[index, "sentiment_" + llm_chosen] = sentiment
                 df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
-                df.at[index, "justification_sentiment_" + llm_chosen] = justification
+                df.at[index, "justification_sentiment_" + llm_chosen] = justification_sentiment
                 df.at[index, "processing_date_sentiment"] = date
                 df.at[index, "processing_hour_sentiment"] = time
                 df.at[index, "emotion_raw_" + llm_chosen] = emotion_raw_llm

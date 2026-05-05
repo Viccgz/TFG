@@ -25,18 +25,18 @@ clientDeepseek = OpenAI(api_key= config['deepseek_api_key'], base_url="https://a
 
 # ES: Pompts analisis de sentimiento
 # EN: Sentiment analysis prompts
-sentiment_prompt = "From the data provided, classify the sentiment of the text as positive, negative, or neutral. You must use the following values for the sentiment key: positive, negative, or neutral. The third key IS certainty, NOT certainly\n "
-sentiment_justify_prompt = "Return the result as a JSON object with the following keys: sentiment, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
-sentiment_not_justify_prompt = "Return the result as a JSON object with the following keys: sentiment and certainty. Format example: {\"sentiment\": \"positive\", \"certainty\": \"90%\"}\n "
+sentiment_prompt = "From the data provided, classify the sentiment of the text as positive, negative, or neutral. You must use the following values for the sentiment key: positive, negative, or neutral. The third key IS certainty, NOT certainly.\n "
+sentiment_justify_prompt = "Return the result as a JSON object with the following keys: sentiment, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}. The text to analyze is: \n "
+sentiment_not_justify_prompt = "Return the result as a JSON object with the following keys: sentiment and certainty. Format example: {\"sentiment\": \"positive\", \"certainty\": \"90%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n "
 
 # ES: Pompts analisis de emociones
 # EN: Emotion analysis prompts
 goemotions_labels = sorted(GO_EMOTIONS_LABELS)
 emotions_str = ", ".join(goemotions_labels)
 
-emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly\n "
-emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}\n "
-emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n "
+emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of the following categories: [{emotions_str}]. DO NOT INVENT new emotions, that is forbidden. The third key IS certainty, NOT certainly.\n "
+emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}. The text to analyze is: \n "
+emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n"
 
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
@@ -52,9 +52,9 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
         model="gpt-5-mini-2025-08-07",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": ((text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)) 
-                           if evaluation_mode == "sentiment_analysis" else ((text + emotion_prompt + emotion_justify_prompt) if justify 
-                                                                      else (text + emotion_prompt + emotion_not_justify_prompt))
+                    {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
+                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
+                                                                      else (emotion_prompt + emotion_not_justify_prompt + text))
                     }
                 ],
                 stream=False
@@ -100,9 +100,9 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
         model="deepseek-reasoner",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": ((text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)) 
-                           if evaluation_mode == "sentiment_analysis" else ((text + emotion_prompt + emotion_justify_prompt) if justify 
-                                                                      else (text + emotion_prompt + emotion_not_justify_prompt))
+                    {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
+                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
+                                                                      else (emotion_prompt + emotion_not_justify_prompt + text))
                     }
                 ],
                 stream=False
@@ -145,9 +145,9 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
     # EN: Generate the initial response with Gemini
     try:
         if evaluation_mode == "sentiment_analysis":
-            prompt = ( text + sentiment_prompt + sentiment_justify_prompt) if justify else (text + sentiment_prompt + sentiment_not_justify_prompt)
+            prompt = ( sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)
         else:
-            prompt = ( text + emotion_prompt + emotion_justify_prompt) if justify else (text + emotion_prompt + emotion_not_justify_prompt)
+            prompt = ( emotion_prompt + emotion_justify_prompt + text) if justify else (emotion_prompt + emotion_not_justify_prompt + text )
 
         response = modelGemini.generate_content(prompt).text.strip()
         utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset, id)

@@ -34,13 +34,13 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]):
             function = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
-            sentiment, certainty, justification, date, time = function(message, justification, "sentiment_analysis", dataset, id)
+            sentiment, certainty, justification_sentiment, date, time = function(message, justification, "sentiment_analysis", dataset, id)
 
             # ES: Actualizar el dataframe creando una nueva columna
             # EN: Update the dataframe creating a new column
             df.at[index, "sentiment_" + llm_chosen] = sentiment
             df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
-            df.at[index, "justification_sentiment_" + llm_chosen] = justification
+            df.at[index, "justification_sentiment_" + llm_chosen] = justification_sentiment
             df.at[index, "processing_date_sentiment"] = date
             df.at[index, "processing_hour_sentiment"] = time
 
