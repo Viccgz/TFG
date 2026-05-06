@@ -12,7 +12,6 @@ import os
 
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_threads=8):
-    process_start_time = timer.perf_counter()
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
@@ -77,12 +76,13 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
-    return process_start_time
+
     
 
 
 if __name__ == "__main__":
     
+    process_start_time = timer.perf_counter()
     #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
     dataset = input("Which dataset would you like to get analyzed? (ISEAR/GOEMOTIONS/KAGGLE/DEFAULT): ")
     while dataset.upper() != 'ISEAR' and dataset.upper() != 'GOEMOTIONS' and dataset.upper() != 'KAGGLE' and dataset.upper() != 'DEFAULT':
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # ES: Guardar el CSV en el directorio actual
     # EN: Save the CSV in the current directory
     if dataset.upper() == 'ISEAR':
-        csv_filename = "./data/processed/isear_emotions_normalized.csv"
+        csv_filename = "./data/processed/gemini_isear_restantes.csv"
     elif dataset.upper() == 'GOEMOTIONS':
         csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
     elif dataset.upper() == 'KAGGLE':
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     output_csv = "./data/results/concurrente/" + llm_chosen + "_"+ dataset + "_results.csv"
     num_threads = 8  # Sugerido para I/O bound operations como llamadas a LLM
     print(f"Using {num_threads} threads for concurrent processing.")
-    process_start_time = process_csv(csv_filename, output_csv, llm_chosen, justification, dataset, num_threads)
+    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset, num_threads)
  
     # Load the CSV with LLM results
     df = pd.read_csv(output_csv)

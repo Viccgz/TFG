@@ -8,7 +8,6 @@ import utils
 import sentiment_analysis.libraries_call as libraries_call
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
-    process_start_time = timer.perf_counter()
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
@@ -62,12 +61,11 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)
-    return process_start_time
-    
 
 
 if __name__ == "__main__":
     
+    process_start_time = timer.perf_counter()
     #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
     dataset = input("Which dataset would you like to get analyzed? (ISEAR/GOEMOTIONS/KAGGLE/DEFAULT): ")
     while dataset.upper() != 'ISEAR' and dataset.upper() != 'GOEMOTIONS' and dataset.upper() != 'KAGGLE' and dataset.upper() != 'DEFAULT':
@@ -118,7 +116,7 @@ if __name__ == "__main__":
             llm_chosen = input(f"Incorrect format, which LLM model would you like to use? ({'/'.join(llm_call.AVAILABLE_LLMS)}): ")
 
     output_csv = "./data/results/no_concurrente/" + llm_chosen + "_"+ dataset + "_results.csv"
-    process_start_time = process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
+    process_csv(csv_filename, output_csv, llm_chosen, justification, dataset)
     
     # ES: Realizar análisis de sentimientos y emociones con bibliotecas, y guardar los resultados en el CSV
     # EN: Load the CSV with LLM results

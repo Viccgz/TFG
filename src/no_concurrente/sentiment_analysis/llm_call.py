@@ -97,7 +97,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
     response = clientDeepseek.chat.completions.create(
-        model="deepseek-reasoner",
+        model="deepseek-v4-flash",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
