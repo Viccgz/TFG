@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Leer CSV (ajusta separador si no es coma)
-df = pd.read_csv("TFG_Results_EmotionalAnalysis.isear_gemini_results_concurrente.csv", sep=";", dtype=str)
+df = pd.read_csv("TFG_Results_EmotionalAnalysis.isear_deepseek_results_concurrente.csv", sep=";", dtype=str)
 
 # Nombre de la columna ID (ajústalo si se llama distinto)
 ID_COL = df.columns[1]  # en tu ejemplo parece la segunda columna (40156)

@@ -23,10 +23,24 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     collection = db[COLLECTION_NAME]
 
     df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
-    for column in ["sentiment_" + llm_chosen, "certainty_sentiment_" + llm_chosen, "justification_sentiment_" + llm_chosen, 
-                   "emotion_raw_" + llm_chosen,"emotion_mapped_" + llm_chosen, "certainty_emotion_" + llm_chosen, "justification_emotion_" + llm_chosen]:
+    string_columns = [
+        "sentiment_" + llm_chosen,
+        "justification_sentiment_" + llm_chosen,
+        "certainty_sentiment_" + llm_chosen,
+        "emotion_raw_" + llm_chosen,
+        "emotion_mapped_" + llm_chosen,
+        "certainty_emotion_" + llm_chosen,
+        "justification_emotion_" + llm_chosen,
+        "processing_date_sentiment",
+        "processing_hour_sentiment",
+        "processing_date_emotion",
+        "processing_hour_emotion"
+    ]
+    for column in string_columns:
         if column not in df.columns:
-            df[column] = None
+            df[column] = pd.Series([None] * len(df), dtype="string")
+        elif df[column].dtype not in ["object", "string"]:
+            df[column] = df[column].astype("string")
     print("llm_chosen: ", llm_chosen)
 
     # Lock para acceso exclusivo al DataFrame
@@ -65,7 +79,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
 
     # Procesar filas concurrentemente
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -91,7 +105,7 @@ if __name__ == "__main__":
     # ES: Guardar el CSV en el directorio actual
     # EN: Save the CSV in the current directory
     if dataset.upper() == 'ISEAR':
-        csv_filename = "./data/processed/gemini_isear_restantes.csv"
+        csv_filename = "./data/processed/isear_emotions_normalized.csv"
     elif dataset.upper() == 'GOEMOTIONS':
         csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
     elif dataset.upper() == 'KAGGLE':
@@ -124,6 +138,7 @@ if __name__ == "__main__":
                                                   # EN: Change to the PC's which has the database IP if running from another computer
     DATABASE_NAME = 'TFG_Results_EmotionalAnalysis'
     COLLECTION_NAME = dataset + '_' + llm_chosen + '_results_concurrente'
+    print(f"Connecting to MongoDB at {MONGO_URI}, database: {DATABASE_NAME}, collection: {COLLECTION_NAME}")
     client = MongoClient(MONGO_URI)
     data_base = client[DATABASE_NAME]
     colection = data_base[COLLECTION_NAME]

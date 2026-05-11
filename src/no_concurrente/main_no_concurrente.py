@@ -19,9 +19,31 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     collection = db[COLLECTION_NAME]
 
     df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
-    for column in ["sentiment_" + llm_chosen, "certainty_sentiment_" + llm_chosen, "justification_sentiment_" + llm_chosen, "total_process_time_seconds_" + llm_chosen, "emotion_" + llm_chosen, "certainty_emotion_" + llm_chosen, "justification_emotion_" + llm_chosen, "processing_date_sentiment", "processing_hour_sentiment", "processing_date_emotion", "processing_hour_emotion"]:
+    string_columns = [
+        "sentiment_" + llm_chosen,
+        "justification_sentiment_" + llm_chosen,
+        "certainty_sentiment_" + llm_chosen,
+        "emotion_" + llm_chosen,
+        "justification_emotion_" + llm_chosen,
+        "certainty_emotion_" + llm_chosen,
+        "processing_date_sentiment",
+        "processing_hour_sentiment",
+        "processing_date_emotion",
+        "processing_hour_emotion"
+    ]
+    float_columns = [
+        "total_process_time_seconds_" + llm_chosen
+    ]
+    for column in string_columns:
         if column not in df.columns:
-            df[column] = None
+            df[column] = pd.Series([None] * len(df), dtype="string")
+        elif df[column].dtype not in ["object", "string"]:
+            df[column] = df[column].astype("string")
+    for column in float_columns:
+        if column not in df.columns:
+            df[column] = pd.Series([pd.NA] * len(df), dtype="Float64")
+        else:
+            df[column] = pd.to_numeric(df[column], errors="coerce")
     print("llm_chosen: ", llm_chosen)
     for index, row in df.iterrows():
         id = row["id"]
@@ -56,7 +78,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
 
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)

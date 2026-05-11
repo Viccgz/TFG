@@ -41,25 +41,28 @@ def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justifi
     if message:
         message = sanitize_text(message)
 
-    collection.insert_one({
-            "id": id,
-            "message": message,
-            "emotion_raw_gt": emotion_raw_gt,
-            "emotion_mapped_gt": emotion_mapped_gt,
-            
-            "sentiment": sentiment,
-            "certainty": certainty,
-            "justification": justification,
-            "date": processing_date,
-            "time": processing_hour,
-            
-            "emotion_raw_llm": emotion_raw_llm,
-            "emotion_mapped_llm": emotion_mapped_llm,
-            "certainty_emotion": certainty_emotion,
-            "justification_emotion": justification_emotion,
-            "date_emotion": date_emotion,
-            "time_emotion": time_emotion
-        })
+    try:
+        collection.insert_one({
+                "id": id,
+                "message": message,
+                "emotion_raw_gt": emotion_raw_gt,
+                "emotion_mapped_gt": emotion_mapped_gt,
+                
+                "sentiment": sentiment,
+                "certainty": certainty,
+                "justification": justification,
+                "date": processing_date,
+                "time": processing_hour,
+                
+                "emotion_raw_llm": emotion_raw_llm,
+                "emotion_mapped_llm": emotion_mapped_llm,
+                "certainty_emotion": certainty_emotion,
+                "justification_emotion": justification_emotion,
+                "date_emotion": date_emotion,
+                "time_emotion": time_emotion
+            })
+    except Exception as e:
+        print(f"Error saving to MongoDB: {e}")
 
 
 
