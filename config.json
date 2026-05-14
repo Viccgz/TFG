@@ -1,6 +1,7 @@
 {
     "OPEN_AI_KEY_SECRET": "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", 
     "genai_api_key": "AIzaSyC2tlm7so1iiAVf6RqLvBEy_X5XN_ax8s4", 
-    "deepseek_api_key":"sk-8ac6c705b58a46b2b6187737f61e9eac"
+    "deepseek_api_key":"sk-8ac6c705b58a46b2b6187737f61e9eac",
+    "mistral_api_key": "peRbFpStMM7Z8sK6cJLl33wt6dO6J76Y"
 }
 

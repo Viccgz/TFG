@@ -4,6 +4,7 @@ import utils
 import google.generativeai as genai
 from openai import OpenAI
 from dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS, normalize_emotion_label
+from mistralai.client import Mistral
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -11,6 +12,8 @@ with open('config.json') as config_file:
 # ES: Credenciales de la API de OpenAI
 # EN: OpenAI API credentials
 OPEN_AI_KEY_SECRET = config['OPEN_AI_KEY_SECRET']
+
+clientMistral = Mistral(api_key=config["mistral_api_key"])
 
 # ES: Credenciales de la API de Gemini
 # EN: Gemini API credentials
@@ -53,14 +56,14 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
-                           if evaluation_mode == "sentiment_analysis" else (( emotion_prompt + emotion_justify_prompt + text) if justify 
-                                                                      else ( emotion_prompt + emotion_not_justify_prompt + text))
+                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
+                                                                      else (emotion_prompt + emotion_not_justify_prompt + text))
                     }
                 ],
                 stream=False
     )
     response_json = response.choices[0].message.content.strip()
-    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt", dataset, id) 
+    utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt", dataset, id)
 
     # ES: Verifico si la respuesta JSON no está vacía
     # EN: Check if the JSON response is not empty
@@ -147,7 +150,7 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
         if evaluation_mode == "sentiment_analysis":
             prompt = ( sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)
         else:
-            prompt = ( emotion_prompt + emotion_justify_prompt + text) if justify else (emotion_prompt + emotion_not_justify_prompt + text)
+            prompt = ( emotion_prompt + emotion_justify_prompt + text) if justify else (emotion_prompt + emotion_not_justify_prompt + text )
 
         response = modelGemini.generate_content(prompt).text.strip()
         utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset, id)
@@ -159,7 +162,7 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
                 return 'NA', 'NA', 'NA', 'NA', 'NA'
         
         sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(response, "gemini", evaluation_mode, dataset, id)
-
+        
         # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
         # EN: If it's emotion analysis, map the emotion and return both
         if evaluation_mode == "emotion_analysis":
@@ -182,6 +185,42 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
+def send_to_mistral(text, justify, evaluation_mode, dataset, id):
+    response = clientMistral.chat.complete(
+        model="mistral-small-latest", 
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text))
+                   if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify
+                                                              else (emotion_prompt + emotion_not_justify_prompt + text))
+            }
+        ]
+    )
+    output = response.choices[0].message.content.strip()
+
+    if not output:
+        utils.log_message("Null response received.", "mistral", dataset, id)
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
+    try:
+        utils.log_message(f"Mistral's raw response:\n{output}", "mistral", dataset, id)
+        sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "mistral", evaluation_mode, dataset, id)
+
+        if evaluation_mode == "emotion_analysis":
+            emotion_raw = sentiment
+            emotion_mapped = normalize_emotion_label(emotion_raw)
+            return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
+        else:
+            return sentiment, certainty, justification, processing_date, processing_hour
+
+    except json.JSONDecodeError as e:
+        utils.log_message(f"Error decoding JSON: {e}", "mistral", dataset, id)
+        if evaluation_mode == "emotion_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+            return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 # ES: Registro de LLMs disponibles
 # EN: Registry of available LLMs
@@ -199,10 +238,11 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
 LLM_FUNCTIONS = {
     'CHATGPT': send_to_chatgpt,
     'GEMINI': send_to_gemini,
-    'DEEPSEEK': send_to_deepseek
+    'DEEPSEEK': send_to_deepseek,
+    'MISTRAL': send_to_mistral  # Placeholder para Mistral, implementar send_to_mistral y asignar aquí
 }
 
-# ES: Lista de LLMs disponibles 
+# ES: Lista de LLMs disponibles
 # EN: List of available LLMs
 AVAILABLE_LLMS = []
 if config.get('OPEN_AI_KEY_SECRET'):
@@ -211,4 +251,6 @@ if config.get('genai_api_key'):
     AVAILABLE_LLMS.append('GEMINI')
 if config.get('deepseek_api_key'):
     AVAILABLE_LLMS.append('DEEPSEEK')
+if config.get('mistral_api_key'):
+    AVAILABLE_LLMS.append('MISTRAL')
 

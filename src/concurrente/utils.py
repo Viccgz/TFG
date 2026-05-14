@@ -9,7 +9,8 @@ import json
 LOG_PLANTILLAS = {
     "chatgpt": "LOGS/{dataset}_chatgpt_log.txt",
     "gemini": "LOGS/{dataset}_gemini_log.txt",
-    "deepseek": "LOGS/{dataset}_deepseek_log.txt"
+    "deepseek": "LOGS/{dataset}_deepseek_log.txt",
+    "mistral": "LOGS/{dataset}_mistral_log.txt"
 }
 
 def log_message(msg, llm, dataset, id):
