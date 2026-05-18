@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # ES: Guardar el CSV en el directorio actual
     # EN: Save the CSV in the current directory
     if dataset.upper() == 'ISEAR':
-        csv_filename = "./data/processed/isear_emotions_normalized.csv"
+        csv_filename = "./data/processed/isear_emotions_normalized2.csv"
     elif dataset.upper() == 'GOEMOTIONS':
         csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
     elif dataset.upper() == 'KAGGLE':

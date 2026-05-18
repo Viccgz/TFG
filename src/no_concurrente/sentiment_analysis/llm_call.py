@@ -1,10 +1,14 @@
 import json
+import threading
 import openai
 import utils
 import google.generativeai as genai
 from openai import OpenAI
 from dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS, normalize_emotion_label
 from mistralai.client import Mistral
+import time
+
+mistral_semaphore = threading.Semaphore(1)
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -186,17 +190,39 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 def send_to_mistral(text, justify, evaluation_mode, dataset, id):
-    response = clientMistral.chat.complete(
-        model="mistral-small-latest", 
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant"},
-            {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text))
-                   if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify
-                                                              else (emotion_prompt + emotion_not_justify_prompt + text))
-            }
-        ]
-    )
-    output = response.choices[0].message.content.strip()
+    max_retries = 6
+    for attempt in range(max_retries):
+        try:
+            with mistral_semaphore:
+                time.sleep(1)  # Espera fija de 1 segundo entre solicitudes para evitar el rate limit --> daba problemas por ir demasiado rápido, aunque el rate limit es de 20 rpm, con 1.5s entre solicitudes debería ser suficiente para no recibir 429.
+                response = clientMistral.chat.complete(
+                    model="mistral-small-latest",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant"},
+                        {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text))
+                               if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify
+                                                                          else (emotion_prompt + emotion_not_justify_prompt + text))
+                        }
+                    ]
+                )
+            output = response.choices[0].message.content.strip()
+            break  # éxito, salir del loop
+
+        except Exception as e:
+            retryable_errors = ["429", "rate_limited", "500", "502", "503", "504", "timeout", "timed out", "ReadTimeout", "Service unavailable", "ConnectTimeout"]
+            if any(error in str(e) for error in retryable_errors):
+                wait = 2 ** attempt  # 1s, 2s, 4s, 8s, 16s, 32s
+                utils.log_message(f"Error de Mistral detectado {e}, reintentando en {wait}s (intento {attempt+1}/{max_retries})", "mistral", dataset, id)
+                time.sleep(wait)
+                if attempt == max_retries - 1:
+                    utils.log_message("Max retries alcanzado.", "mistral", dataset, id)
+                    if evaluation_mode == "emotion_analysis":
+                        return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+                    else:
+                        return 'NA', 'NA', 'NA', 'NA', 'NA'
+            else:
+                utils.log_message(f"Error inesperado de Mistral: {e}", "mistral", dataset, id)
+                raise
 
     if not output:
         utils.log_message("Null response received.", "mistral", dataset, id)

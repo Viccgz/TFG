@@ -9,13 +9,14 @@ import json
 LOG_PLANTILLAS = {
     "chatgpt": "LOGS/{dataset}_chatgpt_log.txt",
     "gemini": "LOGS/{dataset}_gemini_log.txt",
-    "deepseek": "LOGS/{dataset}_deepseek_log.txt"
+    "deepseek": "LOGS/{dataset}_deepseek_log.txt",
+    "mistral": "LOGS/{dataset}_mistral_log.txt",
 }
 
 def log_message(msg, llm, dataset, id):
     template = LOG_PLANTILLAS.get(llm.lower())
     if not template:
-        print(f"Error: LLM '{llm}' invvalido con identificador {id}. No se registrará el mensaje: {msg}")
+        print(f"Error: LLM '{llm}' invalido con identificador {id}. No se registrará el mensaje: {msg}")
         return
     log_file_path = template.format(dataset=dataset.upper())
     os.makedirs(os.path.dirname(log_file_path), exist_ok=True)

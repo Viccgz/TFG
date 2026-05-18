@@ -194,7 +194,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
     for attempt in range(max_retries):
         try:
             with mistral_semaphore:
-                time.sleep(0.5)  # Espera fija de 0.5 segundos entre solicitudes para evitar el rate limit --> daba problemas por ir demasiado rápido, aunque el rate limit es de 20 rpm, con 1.5s entre solicitudes debería ser suficiente para no recibir 429.
+                time.sleep(1)  # Espera fija de 1 segundo entre solicitudes para evitar el rate limit --> daba problemas por ir demasiado rápido, aunque el rate limit es de 20 rpm, con 1.5s entre solicitudes debería ser suficiente para no recibir 429.
                 response = clientMistral.chat.complete(
                     model="mistral-small-latest",
                     messages=[
@@ -209,9 +209,10 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
             break  # éxito, salir del loop
 
         except Exception as e:
-            if "429" in str(e) or "rate_limited" in str(e).lower():
+            retryable_errors = ["429", "rate_limited", "500", "502", "503", "504", "timeout", "timed out", "ReadTimeout", "Service unavailable", "ConnectTimeout"]
+            if any(error in str(e) for error in retryable_errors):
                 wait = 2 ** attempt  # 1s, 2s, 4s, 8s, 16s, 32s
-                utils.log_message(f"Rate limit 429, reintentando en {wait}s (intento {attempt+1}/{max_retries})", "mistral", dataset, id)
+                utils.log_message(f"Error de Mistral detectado {e}, reintentando en {wait}s (intento {attempt+1}/{max_retries})", "mistral", dataset, id)
                 time.sleep(wait)
                 if attempt == max_retries - 1:
                     utils.log_message("Max retries alcanzado.", "mistral", dataset, id)
@@ -220,6 +221,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
                     else:
                         return 'NA', 'NA', 'NA', 'NA', 'NA'
             else:
+                utils.log_message(f"Error inesperado de Mistral: {e}", "mistral", dataset, id)
                 raise
 
     if not output:
