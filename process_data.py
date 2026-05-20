@@ -13,7 +13,7 @@ df = libraries_call.vader_sentiment_analysis(df)
 df = libraries_call.BERT_sentiment_analysis(df)
     
 # Save sentiment analysis results
-sentiment_csv = "./data/results/no_concurrente/" + "mistral" + "_"+ "isear" + "_sentiment_analysis_results.csv"
+sentiment_csv = "./data/results/concurrente/" + "mistral" + "_"+ "kaggle" + "_sentiment_analysis_results.csv"
 os.makedirs(os.path.dirname(sentiment_csv), exist_ok=True)
 df.to_csv(sentiment_csv, index=False)
 print(f"Sentiment analysis results saved to {sentiment_csv}")
@@ -28,7 +28,7 @@ df["emotion_mapped_NRCLex"] = df["emotion_raw_NRCLex"].apply(lambda x: normalize
 df["emotion_mapped_EmoRoBERTa"] = df["emotion_raw_EmoRoBERTa"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
 df["emotion_mapped_GoEmotions"] = df["emotion_raw_GoEmotions"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
 # Save emotion analysis results
-emotion_csv = "./data/results/no_concurrente/" + "mistral" + "_"+ "isear" + "_sentiment_emotion_analysis_results.csv"
+emotion_csv = "./data/results/concurrente/" + "mistral" + "_"+ "kaggle" + "_sentiment_emotion_analysis_results.csv"
 os.makedirs(os.path.dirname(emotion_csv), exist_ok=True)
 df.to_csv(emotion_csv, index=False)
 print(f"Emotion analysis results saved to {emotion_csv}")
@@ -56,6 +56,6 @@ final_cols = order_base_columns + order_remaining_cols
 final_cols = [col for col in final_cols if col in df.columns]
 df = df[final_cols]
     
-df.to_csv("mistral_isear_sentiment_emotion_analysis_results.csv", index=False)
+df.to_csv("mistral_kaggle_sentiment_emotion_analysis_results.csv", index=False)
 
 print("All processes completed successfully.")

@@ -109,7 +109,7 @@ if __name__ == "__main__":
     elif dataset.upper() == 'GOEMOTIONS':
         csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
     elif dataset.upper() == 'KAGGLE':
-        csv_filename = "./data/processed/kaggle_emotions_normalized.csv"
+        csv_filename = "./data/processed/kaggle_emotions_normalized2.csv"
     else:
         print("Using default CSV file (mini go emotions dataset).")
         csv_filename = "./data/processed/default_emotions_normalized.csv"
