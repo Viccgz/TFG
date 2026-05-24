@@ -22,7 +22,7 @@ clientMistral = Mistral(api_key=config["mistral_api_key"])
 # ES: Credenciales de la API de Gemini
 # EN: Gemini API credentials
 genai.configure(api_key= config['genai_api_key'])
-generation_config = {"temperature": 0.9, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0}
+generation_config = {"temperature": 0.0, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0}
 modelGemini = genai.GenerativeModel("gemini-2.5-flash", generation_config=generation_config)
 
 
