@@ -10,6 +10,7 @@ transformers
 torch  
 scipy
 numpy
+chardet
 
 scikit-learn
 krippendorff

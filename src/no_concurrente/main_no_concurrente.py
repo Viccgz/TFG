@@ -6,6 +6,7 @@ from dataset_preprocessing.emotion_mapper import normalize_emotion_label
 import sentiment_analysis.llm_call as llm_call
 import utils
 import sentiment_analysis.libraries_call as libraries_call
+import chardet
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
@@ -18,7 +19,28 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
 
-    df = pd.read_csv(input_csv, sep=None, engine='python', encoding="utf-8")
+    with open(input_csv, "rb") as f:
+        raw = f.read()
+        result = chardet.detect(raw)
+    detected_encoding = result.get('encoding')
+    
+    if not detected_encoding:
+        detected_encoding = 'utf-8'
+
+    try:
+        df = pd.read_csv(input_csv, sep=None, engine='python', encoding=detected_encoding)
+    except UnicodeDecodeError as err:
+        fallback_encodings = [enc for enc in ["latin-1", "cp1252", "utf-8"] if enc != detected_encoding]
+        df = None
+        for enc in fallback_encodings:
+            try:
+                df = pd.read_csv(input_csv, sep=None, engine='python', encoding=enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        if df is None:
+            df = pd.read_csv(input_csv, sep=None, engine='python', encoding='utf-8', errors='replace')
+
     string_columns = [
         "sentiment_" + llm_chosen,
         "justification_sentiment_" + llm_chosen,
@@ -110,7 +132,7 @@ if __name__ == "__main__":
     if dataset.upper() == 'ISEAR':
         csv_filename = "./data/processed/isear_emotions_normalized2.csv"
     elif dataset.upper() == 'GOEMOTIONS':
-        csv_filename = "./data/processed/goemotions_emotions_normalized.csv"
+        csv_filename = "./data/processed/goemotions_normalized.csv"
     elif dataset.upper() == 'KAGGLE':
         csv_filename = "./data/processed/kaggle_emotions_normalized.csv"
     else:
