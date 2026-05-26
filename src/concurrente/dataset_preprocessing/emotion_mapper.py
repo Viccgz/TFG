@@ -9,7 +9,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 from concurrente.utils import sanitize_text
-from concurrente.dataset_preprocessing.data_loader import descargar_datasets
+from concurrente.dataset_preprocessing.data_loader import download_datasets
 
 GO_EMOTIONS_LABELS = [
     "admiration",
@@ -131,7 +131,8 @@ def normalize_isear_labels(df):
     EN: Normalizes the emotion labels from the ISEAR dataset using EMOTION_MAP
     Args:
         df: DataFrame con las columnas "ID", "content" y "sentiment" (donde "sentiment" es la etiqueta de emoción original)
-    Returns:         DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    Returns:         
+        DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
     """
     
     return pd.DataFrame({
@@ -147,7 +148,8 @@ def normalize_kaggle_emotions_labels(df):
     EN: Normalizes the emotion labels from the Kaggle Emotions dataset using EMOTION_MAP
     Args:
         df: DataFrame con las columnas "id", "text" y "emotion" (donde "emotion" es la etiqueta de emoción original)
-    Returns:         DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    Returns:         
+        DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
     """
 
     ids = []
@@ -187,7 +189,7 @@ def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
     return goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized
 
 if __name__ == "__main__":
-    goemotions_df, kaggle_emotions_df, isear_emotions_df = descargar_datasets()
+    goemotions_df, kaggle_emotions_df, isear_emotions_df = download_datasets()
 
     goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized = normalize_datasets(
         goemotions_df, kaggle_emotions_df, isear_emotions_df
