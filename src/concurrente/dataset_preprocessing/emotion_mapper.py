@@ -9,6 +9,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 from concurrente.utils import sanitize_text
+from concurrente.dataset_preprocessing.data_loader import descargar_datasets
 
 GO_EMOTIONS_LABELS = [
     "admiration",
@@ -94,6 +95,15 @@ def normalize_emotion_label(emotion_raw):
     return EMOTION_MAP.get(emotion_raw.lower(), "neutral")
 
 def normalize_go_emotions_labels(df):
+    """
+    ES: Normaliza las etiquetas de emoción del dataset GoEmotions usando EMOTION_MAP
+    EN: Normalizes the emotion labels from the GoEmotions dataset using EMOTION_MAP
+    Args:
+        df: DataFrame con las columnas "id", "text" y "labels" (donde "labels" es una lista de IDs de emociones)
+    Returns:
+        DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    """
+
     emotion_gts = []
     emotion_gts_mapped = []
     ids_list = []
@@ -116,6 +126,14 @@ def normalize_go_emotions_labels(df):
     })
 
 def normalize_isear_labels(df):
+    """
+    ES: Normaliza las etiquetas de emoción del dataset ISEAR usando EMOTION_MAP
+    EN: Normalizes the emotion labels from the ISEAR dataset using EMOTION_MAP
+    Args:
+        df: DataFrame con las columnas "ID", "content" y "sentiment" (donde "sentiment" es la etiqueta de emoción original)
+    Returns:         DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    """
+    
     return pd.DataFrame({
         "id": df["ID"],
         "text": df["content"].apply(sanitize_text),
@@ -124,6 +142,14 @@ def normalize_isear_labels(df):
     })
 
 def normalize_kaggle_emotions_labels(df):
+    """
+    ES: Normaliza las etiquetas de emoción del dataset Kaggle Emotions usando EMOTION_MAP
+    EN: Normalizes the emotion labels from the Kaggle Emotions dataset using EMOTION_MAP
+    Args:
+        df: DataFrame con las columnas "id", "text" y "emotion" (donde "emotion" es la etiqueta de emoción original)
+    Returns:         DataFrame con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    """
+
     ids = []
     texts = []    
     emotion_gts = []
@@ -144,6 +170,16 @@ def normalize_kaggle_emotions_labels(df):
     })
 
 def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
+    """
+    ES: Normaliza las etiquetas de emoción de los datasets GoEmotions, Kaggle Emotions e ISEAR usando EMOTION_MAP
+    EN: Normalizes the emotion labels from the GoEmotions, Kaggle Emotions, and ISEAR datasets using EMOTION_MAP
+    Args:
+        goemotions_df: DataFrame del dataset GoEmotions con las columnas "id", "text" y "labels" (donde "labels" es una lista de IDs de emociones)
+        kaggle_emotions_df: DataFrame del dataset Kaggle Emotions con las columnas "id", "text" y "emotion" (donde "emotion" es la etiqueta de emoción original)
+        isear_emotions_df: DataFrame del dataset ISEAR con las columnas "ID", "content" y "sentiment" (donde "sentiment" es la etiqueta de emoción original)
+    Returns:
+         Tres DataFrames normalizados con las columnas "id", "text", "emotion_gt" (la emoción original) y "emotion_gt_mapped" (la emoción mapeada)
+    """
     goemotions_normalized = normalize_go_emotions_labels(goemotions_df)
     kaggle_emotions_normalized = normalize_kaggle_emotions_labels(kaggle_emotions_df)
     isear_emotions_normalized = normalize_isear_labels(isear_emotions_df)
@@ -151,9 +187,7 @@ def normalize_datasets(goemotions_df, kaggle_emotions_df, isear_emotions_df):
     return goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized
 
 if __name__ == "__main__":
-    goemotions_df = pd.read_csv("data/raw/goemotions/goemotions.csv")
-    kaggle_emotions_df = pd.read_csv("data/raw/kaggle/kaggle_dataset.csv")
-    isear_emotions_df = pd.read_csv("data/raw/isear/isear_dataset.csv")
+    goemotions_df, kaggle_emotions_df, isear_emotions_df = descargar_datasets()
 
     goemotions_normalized, kaggle_emotions_normalized, isear_emotions_normalized = normalize_datasets(
         goemotions_df, kaggle_emotions_df, isear_emotions_df

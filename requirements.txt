@@ -11,6 +11,8 @@ torch
 scipy
 numpy
 chardet
+kagglehub
+datasets
 
 scikit-learn
 krippendorff
