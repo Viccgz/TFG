@@ -1,7 +1,6 @@
 from datasets import load_dataset
 import pandas as pd
 import os
-import kagglehub
 
 def download_goemotions(save_path="data/raw/goemotions/goemotions.csv"):
     """
@@ -42,6 +41,7 @@ def download_kaggle_emotions(save_path="data/raw/kaggle/kaggle_dataset.csv"):
         return pd.read_csv(save_path)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    import kagglehub
     save_path = kagglehub.dataset_download("praveengovi/emotions-dataset-for-nlp")
     print("Path to dataset files:", save_path)
 
@@ -60,6 +60,7 @@ def download_isear_emotions(save_path="data/raw/isear/isear_dataset.csv"):
         return pd.read_csv(save_path)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    import kagglehub
     save_path = kagglehub.dataset_download("faisalsanto007/isear-dataset")
     print("Path to dataset files:", save_path)
 

@@ -26,7 +26,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         raw = f.read()
         result = chardet.detect(raw)
     detected_encoding = result.get('encoding')
-    
+
     if not detected_encoding:
         detected_encoding = 'utf-8'
 
@@ -47,25 +47,49 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
     string_columns = [
         "sentiment_" + llm_chosen,
         "justification_sentiment_" + llm_chosen,
-        "certainty_sentiment_" + llm_chosen,
         "emotion_raw_" + llm_chosen,
         "emotion_mapped_" + llm_chosen,
-        "certainty_emotion_" + llm_chosen,
         "justification_emotion_" + llm_chosen,
         "processing_date_sentiment",
         "processing_hour_sentiment",
         "processing_date_emotion",
         "processing_hour_emotion"
     ]
+    numeric_columns = [
+        "certainty_sentiment_" + llm_chosen,
+        "certainty_emotion_" + llm_chosen
+    ]
+
     for column in string_columns:
         if column not in df.columns:
             df[column] = pd.Series([None] * len(df), dtype="string")
         elif df[column].dtype not in ["object", "string"]:
             df[column] = df[column].astype("string")
+
+    for column in numeric_columns:
+        if column not in df.columns:
+            df[column] = pd.Series([pd.NA] * len(df), dtype="Float64")
+        else:
+            df[column] = pd.to_numeric(df[column], errors="coerce").astype("Float64")
     print("llm_chosen: ", llm_chosen)
 
     # Lock para acceso exclusivo al DataFrame
     df_lock = threading.Lock()
+
+    def to_string_value(value):
+        if pd.isna(value):
+            return pd.NA
+        return str(value)
+
+    def to_numeric_value(value):
+        if pd.isna(value):
+            return pd.NA
+        if isinstance(value, str):
+            value = value.strip().rstrip('%')
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return pd.NA
 
     def process_row(index, row, justification):
         id = row["id"]
@@ -86,17 +110,18 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
             
             # Usar lock para actualizar el DataFrame
             with df_lock:
-                df.at[index, "sentiment_" + llm_chosen] = sentiment
-                df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
-                df.at[index, "justification_sentiment_" + llm_chosen] = justification_sentiment
-                df.at[index, "processing_date_sentiment"] = date
-                df.at[index, "processing_hour_sentiment"] = time
-                df.at[index, "emotion_raw_" + llm_chosen] = emotion_raw_llm
-                df.at[index, "emotion_mapped_" + llm_chosen] = emotion_mapped
-                df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
-                df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
-                df.at[index, "processing_date_emotion"] = date_emotion
-                df.at[index, "processing_hour_emotion"] = time_emotion
+                df.at[index, "text"] = to_string_value(message)
+                df.at[index, "sentiment_" + llm_chosen] = to_string_value(sentiment)
+                df.at[index, "certainty_sentiment_" + llm_chosen] = to_numeric_value(certainty)
+                df.at[index, "justification_sentiment_" + llm_chosen] = to_string_value(justification_sentiment)
+                df.at[index, "processing_date_sentiment"] = to_string_value(date)
+                df.at[index, "processing_hour_sentiment"] = to_string_value(time)
+                df.at[index, "emotion_raw_" + llm_chosen] = to_string_value(emotion_raw_llm)
+                df.at[index, "emotion_mapped_" + llm_chosen] = to_string_value(emotion_mapped)
+                df.at[index, "certainty_emotion_" + llm_chosen] = to_numeric_value(certainty_emotion)
+                df.at[index, "justification_emotion_" + llm_chosen] = to_string_value(justification_emotion)
+                df.at[index, "processing_date_emotion"] = to_string_value(date_emotion)
+                df.at[index, "processing_hour_emotion"] = to_string_value(time_emotion)
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
@@ -128,9 +153,9 @@ if __name__ == "__main__":
     if dataset.upper() == 'ISEAR':
         csv_filename = "./data/processed/isear_emotions_normalized.csv"
     elif dataset.upper() == 'GOEMOTIONS':
-        csv_filename = "./data/processed/goemotions_normalized.csv"
+        csv_filename = "./data/processed/goemotions_normalized2.csv"
     elif dataset.upper() == 'KAGGLE':
-        csv_filename = "./data/processed/kaggle_emotions_normalized2.csv"
+        csv_filename = "./data/processed/kaggle_emotions_normalized.csv"
     else:
         print("Using default CSV file (mini go emotions dataset).")
         csv_filename = "./data/processed/default_emotions_normalized.csv"
