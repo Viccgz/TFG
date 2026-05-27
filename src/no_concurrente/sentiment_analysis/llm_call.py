@@ -56,7 +56,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
     # ES: Generar respuesta inicial de ChatGPT
     # EN: Generate initial ChatGPT response
     response = openai.chat.completions.create(
-        model="gpt-5-mini-2025-08-07",
+        model="gpt-4.1-mini",
         messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
