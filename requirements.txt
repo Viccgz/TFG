@@ -1,21 +1,19 @@
-openai == 1.65.4
-google-generativeai == 0.8.3
+openai==1.65.4
+google-generativeai==0.8.3
 pandas
-pymongo == 4.10.1
+pymongo==4.10.1
 mistralai
-
 textblob
 nltk
 transformers
-torch  
+torch
 scipy
 numpy
 chardet
 kagglehub
 datasets
-
 scikit-learn
-krippendorff
 matplotlib
+krippendorff
 wordcloud
 nrclex

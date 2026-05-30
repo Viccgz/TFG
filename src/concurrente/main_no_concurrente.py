@@ -83,7 +83,10 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             # EN: Update the dataframe creating a new column
             df.at[index, "sentiment_" + llm_chosen] = sentiment
             df.at[index, "certainty_sentiment_" + llm_chosen] = certainty
-            df.at[index, "justification_sentiment_" + llm_chosen] = justification_sentiment
+
+            if justification:
+                df.at[index, "justification_sentiment_" + llm_chosen] = justification_sentiment
+                
             df.at[index, "processing_date_sentiment"] = date
             df.at[index, "processing_hour_sentiment"] = time
 
@@ -94,7 +97,10 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             
             df.at[index, "emotion_" + llm_chosen] = emotion_mapped
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
-            df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
+
+            if justification:
+                df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
+
             df.at[index, "processing_date_emotion"] = date_emotion
             df.at[index, "processing_hour_emotion"] = time_emotion
 
