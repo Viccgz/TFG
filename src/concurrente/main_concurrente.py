@@ -100,7 +100,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
-        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]):
+        if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]) or row["sentiment_" + llm_chosen] == "NA" or row["certainty_sentiment_" + llm_chosen] == "NA" or row["emotion_raw_" + llm_chosen] == "NA" or row["certainty_emotion_" + llm_chosen] == "NA":
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             sentiment, certainty, justification_sentiment, date, time = func(message, justification, "sentiment_analysis", dataset, id)
             
