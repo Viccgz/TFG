@@ -38,11 +38,11 @@ def normalize_sentiment_series(series):
     return series.apply(lambda x: _normalize_label(x, mapping=SENTIMENT_MAPPING))
 
 
-def _clean_series(series):
+def clean_series(series):
     return series.astype(str).str.strip().str.lower().replace({"nan": np.nan})
 
 
-def _filter_labels(y_true, y_pred, labels):
+def filter_labels(y_true, y_pred, labels):
     mask = y_true.isin(labels) & y_pred.isin(labels)
     return y_true[mask], y_pred[mask]
 
@@ -92,7 +92,7 @@ def evaluate_sentiment(df, pred_column, gt_column="emotion", labels=None):
 
     y_true = normalize_sentiment_series(df[gt_column])
     y_pred = normalize_sentiment_series(df[pred_column])
-    y_true, y_pred = _filter_labels(y_true, y_pred, labels)
+    y_true, y_pred = filter_labels(y_true, y_pred, labels)
 
     result = _classification_metrics(y_true, y_pred, labels)
     result["task"] = "sentiment"
@@ -106,9 +106,9 @@ def evaluate_mapped_emotions(df, pred_column, gt_column="emotion_gt_mapped", lab
     if labels is None:
         labels = MAPPED_EMOTION_LABELS
 
-    y_true = _clean_series(df[gt_column])
-    y_pred = _clean_series(df[pred_column])
-    y_true, y_pred = _filter_labels(y_true, y_pred, labels)
+    y_true = clean_series(df[gt_column])
+    y_pred = clean_series(df[pred_column])
+    y_true, y_pred = filter_labels(y_true, y_pred, labels)
 
     result = _classification_metrics(y_true, y_pred, labels)
     result["task"] = "mapped_emotions"
@@ -119,12 +119,12 @@ def evaluate_mapped_emotions(df, pred_column, gt_column="emotion_gt_mapped", lab
 
 def evaluate_fine_grained_emotions(df, pred_column, gt_column, labels=None):
     """Compute fine-grained metrics for raw emotion labels, preferably GoEmotions."""
-    y_true = _clean_series(df[gt_column])
-    y_pred = _clean_series(df[pred_column])
+    y_true = clean_series(df[gt_column])
+    y_pred = clean_series(df[pred_column])
     if labels is None:
         labels = sorted(set(y_true.dropna()).union(set(y_pred.dropna())))
 
-    y_true, y_pred = _filter_labels(y_true, y_pred, labels)
+    y_true, y_pred = filter_labels(y_true, y_pred, labels)
     metrics = _classification_metrics(y_true, y_pred, labels)
     metrics["task"] = "fine_grained_emotions"
     metrics["pred_column"] = pred_column
@@ -132,7 +132,7 @@ def evaluate_fine_grained_emotions(df, pred_column, gt_column, labels=None):
     return metrics
 
 
-def _ensure_plot_backend():
+def ensure_plot_backend():
     if plt is None:
         raise ImportError(
             "matplotlib is required to generate plots. Install it with `pip install matplotlib`."
@@ -140,7 +140,7 @@ def _ensure_plot_backend():
 
 
 def plot_per_class_metrics(result, prefix, show=False):
-    _ensure_plot_backend()
+    ensure_plot_backend()
     df = result["per_class"]
     fig, ax = plt.subplots(figsize=(10, 6))
     df.plot(kind="bar", ax=ax)
@@ -158,7 +158,7 @@ def plot_per_class_metrics(result, prefix, show=False):
 
 
 def plot_confusion_matrix(result, prefix, show=False):
-    _ensure_plot_backend()
+    ensure_plot_backend()
     cm = result["confusion_matrix"]
     labels = list(cm.index)
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -183,7 +183,7 @@ def plot_confusion_matrix(result, prefix, show=False):
 
 
 def plot_summary_metrics(result, prefix, show=False):
-    _ensure_plot_backend()
+    ensure_plot_backend()
     summary = {
         "accuracy": result.get("accuracy"),
         "macro_f1": result.get("macro_f1"),
