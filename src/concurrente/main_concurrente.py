@@ -6,10 +6,63 @@ import utils
 import sentiment_analysis.libraries_call as libraries_call
 import concurrent.futures
 import threading
-from dataset_preprocessing.emotion_mapper import normalize_emotion_label
+from dataset_preprocessing.emotion_mapper import normalize_emotion_label, EMOTION_TO_SENTIMENT_MAP
 from pathlib import Path
 import os
+import io
+import json
 import chardet
+
+
+def convert_json_to_csv(json_path):
+    with open(json_path, "rb") as f:
+        raw = f.read()
+        result = chardet.detect(raw)
+    detected_encoding = result.get('encoding') or 'utf-8'
+
+    try:
+        text = raw.decode(detected_encoding)
+    except (UnicodeDecodeError, LookupError):
+        text = raw.decode('utf-8', errors='replace')
+
+    df = None
+    try:
+        df = pd.read_json(io.StringIO(text), orient='records', lines=False)
+    except ValueError:
+        try:
+            df = pd.read_json(io.StringIO(text), orient='records', lines=True)
+        except ValueError:
+            try:
+                data = json.loads(text)
+                df = pd.json_normalize(data)
+            except Exception as e:
+                raise ValueError(f"No se pudo leer JSON como registros válidos: {e}")
+
+    if 'text' not in df.columns:
+        alt_text = next((c for c in df.columns if c.lower() in ('message', 'mensaje', 'texto', 'review', 'sentence', 'comment', 'contenido')), None)
+        if alt_text:
+            df['text'] = df[alt_text]
+
+    if 'id' not in df.columns:
+        alt_id = next((c for c in df.columns if c.lower() in ('id', 'idx', 'index', 'identifier', 'identificador')), None)
+        if alt_id:
+            df['id'] = df[alt_id]
+        else:
+            df['id'] = range(1, len(df) + 1)
+
+    if 'emotion_gt' not in df.columns:
+        df['emotion_gt'] = pd.NA
+    if 'emotion_gt_mapped' not in df.columns:
+        df['emotion_gt_mapped'] = pd.NA
+
+    if 'text' not in df.columns:
+        raise ValueError("JSON input debe contener una columna 'text' o equivalente.")
+
+    csv_path = str(Path(json_path).with_suffix('.csv'))
+    os.makedirs(os.path.dirname(csv_path) or '.', exist_ok=True)
+    df.to_csv(csv_path, index=False)
+    print(f"Converted JSON input to CSV: {csv_path}")
+    return csv_path
 
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_threads=8):
@@ -97,7 +150,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         message = row["text"]
         emotion_raw_gt = row["emotion_gt"]
         emotion_mapped_gt = row["emotion_gt_mapped"] 
-
+        n_tries = 1
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["certainty_emotion_" + llm_chosen]) or pd.isnull(row["justification_emotion_" + llm_chosen]) or row["sentiment_" + llm_chosen] == "NA" or row["certainty_sentiment_" + llm_chosen] == "NA" or row["emotion_raw_" + llm_chosen] == "NA" or row["certainty_emotion_" + llm_chosen] == "NA":
@@ -108,8 +161,15 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
-            
-            # Usar lock para actualizar el DataFrame
+            with df_lock:
+                if sentiment == EMOTION_TO_SENTIMENT_MAP.get(emotion_mapped, "neutral"):
+                    # ES: Si el sentimiento y la emoción mapeada no son coherentes, volver a llamar al LLM para obtener una nueva respuesta
+                    # EN: If the sentiment and the mapped emotion are not coherent, call the LLM
+                    sentiment, emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, dataset, id)
+                    n_tries = 2
+                    df.at[index, "n_tries"] = to_string_value(n_tries)
+            # ES: Usar lock para actualizar el DataFrame en exclusión mutua
+            # EN: Use lock to update the DataFrame in mutual exclusion
             with df_lock:
                 df.at[index, "text"] = to_string_value(message)
                 df.at[index, "sentiment_" + llm_chosen] = to_string_value(sentiment)
@@ -128,7 +188,9 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt, n_tries)
+            with df_lock:
+                n_tries = 1
 
     # Procesar filas concurrentemente
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -164,28 +226,51 @@ if __name__ == "__main__":
         #TODO: cambiar el input para que sea el nombre del CSV a analizar, y no el origen de los datos, ya que se pueden analizar CSVs de ambos orígenes indistintamente
         available_datasets = get_available_datasets("./data/processed")
         if not available_datasets:
-            raise FileNotFoundError("No dataset CSV files found in ./data/processed")
+            print("No dataset CSV files found in ./data/processed. You can still provide a CSV or JSON file path directly.")
 
-        print("Available datasets:")
-        for index, (name, path) in enumerate(available_datasets, start=1):
-            print(f"  {index}) {name}")
+        if available_datasets:
+            print("Available datasets:")
+            for index, (name, path) in enumerate(available_datasets, start=1):
+                print(f"  {index}) {name}")
 
         selected = None
         while selected is None:
-            choice = input("Select dataset by number or exact name: ").strip()
-            if choice.strip() != "" and choice.isdigit():
+            choice = input("Select dataset by number, exact name, or enter CSV/JSON path: ").strip()
+            if not choice:
+                print("Invalid selection. Please choose a dataset number, exact name, or valid file path.")
+                continue
+
+            path_obj = Path(choice)
+            if path_obj.is_file():
+                if path_obj.suffix.lower() == '.csv':
+                    selected = (path_obj.stem, str(path_obj))
+                    break
+                elif path_obj.suffix.lower() == '.json':
+                    try:
+                        csv_filename = convert_json_to_csv(str(path_obj))
+                        selected = (path_obj.stem, csv_filename)
+                        break
+                    except Exception as e:
+                        print(f"Error converting JSON to CSV: {e}")
+                        continue
+                else:
+                    print("Unsupported file type. Use .csv or .json.")
+                    continue
+
+            if choice.isdigit() and available_datasets:
                 index = int(choice)
                 if 1 <= index <= len(available_datasets):
                     selected = available_datasets[index - 1]
                     break
-            else:
+
+            if available_datasets:
                 for name, path in available_datasets:
                     if name.lower() == choice.lower():
                         selected = (name, path)
                         break
 
             if selected is None:
-                print("Invalid selection. Please choose dataset number or exact name from the list.")
+                print("Invalid selection. Please choose dataset number, exact name, or valid CSV/JSON path.")
 
         dataset, csv_filename = selected
         print(f"Selected dataset: {dataset}")

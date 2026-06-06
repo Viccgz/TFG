@@ -45,6 +45,9 @@ emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of t
 emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}. The text to analyze is: \n "
 emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n"
 
+emotion_and_sentiment_justify_prompt = "The emotion and the sentiment returned are not coherent. Retry again. Return the result as a JSON object with the following keys: sentiment, emotion, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty_sentiment\": \"90%\", \"certainty_emotion\": \"80%\"}. The text to analyze is: \n "
+emotion_and_sentiment_not_justify_prompt = "The emotion and the sentiment returned are not coherent. Retry again. Return the result as a JSON object with the following keys: sentiment, emotion, and certainty. Format example: {\"sentiment\": \"negative\", \"emotion\": \"anger\", \"certainty_sentiment\": \"90%\", \"certainty_emotion\": \"80%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n"
+
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
@@ -61,7 +64,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
                            if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
-                                                                      else (emotion_prompt + emotion_not_justify_prompt + text))
+                                                                      else (emotion_prompt + emotion_not_justify_prompt + text)) 
                     }
                 ],
                 stream=False

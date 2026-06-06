@@ -2,11 +2,16 @@ import os
 import time as timer
 import pandas as pd
 from pymongo import MongoClient
-from dataset_preprocessing.emotion_mapper import normalize_emotion_label
+from dataset_preprocessing.emotion_mapper import EMOTION_TO_SENTIMENT_MAP, normalize_emotion_label
 import sentiment_analysis.llm_call as llm_call
 import utils
 import sentiment_analysis.libraries_call as libraries_call
 import chardet
+
+def to_string_value(value):
+        if pd.isna(value):
+            return pd.NA
+        return str(value)
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
@@ -72,7 +77,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
         message = row["text"]
         emotion_raw_gt = row["emotion_gt"]
         emotion_mapped_gt = row["emotion_gt_mapped"] 
-
+        n_tries = 1
         # ES:  procesar si los campos son nulos
         # EN:  process if fields are null
         if pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["certainty_sentiment_" + llm_chosen]) or pd.isnull(row["justification_sentiment_" + llm_chosen]):
@@ -94,7 +99,12 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
-            
+            if sentiment == EMOTION_TO_SENTIMENT_MAP.get(emotion_mapped, "neutral"):
+                    # ES: Si el sentimiento y la emoción mapeada no son coherentes, volver a llamar al LLM para obtener una nueva respuesta
+                    # EN: If the sentiment and the mapped emotion are not coherent, call the LLM
+                    sentiment, emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, dataset, id)
+                    n_tries = 2
+                    df.at[index, "n_tries"] = to_string_value(n_tries)
             df.at[index, "emotion_" + llm_chosen] = emotion_mapped
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
 
@@ -106,8 +116,8 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt)
-
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt, n_tries)
+            n_tries = 1
     # Guardar el CSV actualizado
     df.to_csv(output_csv, index=False)
     print("CSV updated and stored in : ", output_csv)

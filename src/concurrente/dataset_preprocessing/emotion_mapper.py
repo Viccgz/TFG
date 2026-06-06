@@ -81,6 +81,18 @@ EMOTION_MAP = {
     "neutral": "neutral",
     "desire": "neutral"
 }
+
+EMOTION_TO_SENTIMENT_MAP = {
+    "joy": "positive",
+    "love": "positive",
+    "anger": "negative",
+    "fear": "negative",
+    "sadness": "negative",
+    "disgust": "negative",
+    "surprise": "neutral",
+    "neutral": "neutral"
+}
+
 def normalize_emotion_label(emotion_raw):
     """
     ES: Mapea una etiqueta de emoción raw a una emoción normalizada usando EMOTION_MAP
