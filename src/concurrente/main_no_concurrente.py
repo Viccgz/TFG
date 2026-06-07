@@ -99,20 +99,23 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
             #EN: Perform emotion analysis with LLMs for each message, and save the result
             func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
-            if sentiment == EMOTION_TO_SENTIMENT_MAP.get(emotion_mapped, "neutral"):
-                    # ES: Si el sentimiento y la emoción mapeada no son coherentes, volver a llamar al LLM para obtener una nueva respuesta
-                    # EN: If the sentiment and the mapped emotion are not coherent, call the LLM
-                    sentiment, emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, dataset, id)
-                    n_tries = 2
-                    df.at[index, "n_tries"] = to_string_value(n_tries)
             df.at[index, "emotion_" + llm_chosen] = emotion_mapped
             df.at[index, "certainty_emotion_" + llm_chosen] = certainty_emotion
-
             if justification:
                 df.at[index, "justification_emotion_" + llm_chosen] = justification_emotion
 
             df.at[index, "processing_date_emotion"] = date_emotion
-            df.at[index, "processing_hour_emotion"] = time_emotion
+            df.at[index, "processing_hour_emotion"] = time_emotion 
+
+            emotion_with_sentiment_raw_llm, emotion_with_sentiment_mapped, certainty_emotion_with_sentiment, justification_emotion_with_sentiment, date_emotion_with_sentiment, time_emotion_with_sentiment = func(message, justification, "emotion_with_sentiment_analysis", dataset, id, sentiment=sentiment)
+            df.at[index, "emotion_mapped_with_sentiment_" + llm_chosen ] = emotion_with_sentiment_mapped
+            df.at[index, "emotion_raw_with_sentiment_" + llm_chosen ] = emotion_with_sentiment_raw_llm
+            df.at[index, "certainty_emotion_with_sentiment_" + llm_chosen] = certainty_emotion_with_sentiment
+            if justification:
+                df.at[index, "justification_emotion_with_sentiment_" + llm_chosen] = justification_emotion_with_sentiment
+            df.at[index, "processing_date_emotion_with_sentiment"] = date_emotion_with_sentiment
+            df.at[index, "processing_hour_emotion_with_sentiment"] = time_emotion_with_sentiment
+            
 
             # ES: Guardar en MongoDB
             # EN: Save in MongoDB
