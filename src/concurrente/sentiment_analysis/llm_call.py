@@ -52,6 +52,21 @@ emotion_and_sentiment_justify_prompt = "Taking into account the sentiment retrie
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
 def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None):
+    """
+    ES: Envía el texto a la API de ChatGPT para obtener una clasificación de sentimiento o emoción, junto con una justificación y un nivel de certeza.
+    EN: Sends the text to the ChatGPT API to obtain a sentiment or emotion classification, along with a justification and a certainty level.
+    Args:        
+    text (str): El texto a analizar.
+        justify (bool): Si se debe incluir una justificación en la respuesta.
+        evaluation_mode (str): El modo de evaluación (sentiment_analysis o emotion_analysis).
+        dataset (str): El nombre del dataset.
+        id (str): El ID del mensaje.
+        sentiment (str): El sentimiento previamente obtenido (solo para análisis de emoción con sentimiento).
+    Returns:
+        Si evaluation_mode es "sentiment_analysis": (sentiment, certainty, justification, processing_date, processing_hour)"
+        Si evaluation_mode es "emotion_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+        Si evaluation_mode es "emotion_with_sentiment_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+    """
     # ES: Credenciales de la API de ChatGPT
     # EN: ChatGPT API credentials
     openai.api_key = OPEN_AI_KEY_SECRET
@@ -105,7 +120,21 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None)
             return 'NA', 'NA', 'NA', 'NA', 'NA'
  
 def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None):
-
+    """
+    ES: Envía el texto a la API de Deepseek para obtener una clasificación de sentimiento o emoción, junto con una justificación y un nivel de certeza.
+    EN: Sends the text to the Deepseek API to obtain a sentiment or emotion classification, along with a justification and a certainty level.
+    Args:        
+    text (str): El texto a analizar.
+        justify (bool): Si se debe incluir una justificación en la respuesta.
+        evaluation_mode (str): El modo de evaluación (sentiment_analysis o emotion_analysis).
+        dataset (str): El nombre del dataset.
+        id (str): El ID del mensaje.
+        sentiment (str): El sentimiento previamente obtenido (solo para análisis de emoción con sentimiento).
+    Returns:
+        Si evaluation_mode es "sentiment_analysis": (sentiment, certainty, justification, processing_date, processing_hour)"
+        Si evaluation_mode es "emotion_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+        Si evaluation_mode es "emotion_with_sentiment_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+    """
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
     response = clientDeepseek.chat.completions.create(
@@ -155,6 +184,21 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
 
 
 def send_to_gemini(text, justify, evaluation_mode, dataset, id, sentiment=None):
+    """
+    ES: Envía el texto a la API de Gemini para obtener una clasificación de sentimiento o emoción, junto con una justificación y un nivel de certeza.
+    EN: Sends the text to the Gemini API to obtain a sentiment or emotion classification, along with a justification and a certainty level.
+    Args:        
+    text (str): El texto a analizar.
+        justify (bool): Si se debe incluir una justificación en la respuesta.
+        evaluation_mode (str): El modo de evaluación (sentiment_analysis o emotion_analysis).
+        dataset (str): El nombre del dataset.
+        id (str): El ID del mensaje.
+        sentiment (str): El sentimiento previamente obtenido (solo para análisis de emoción con sentimiento).
+    Returns:
+        Si evaluation_mode es "sentiment_analysis": (sentiment, certainty, justification, processing_date, processing_hour)"
+        Si evaluation_mode es "emotion_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+        Si evaluation_mode es "emotion_with_sentiment_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+    """
     # ES: Generar la respuesta inicial con Gemini
     # EN: Generate the initial response with Gemini
     try:
@@ -199,6 +243,21 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id, sentiment=None):
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 def send_to_mistral(text, justify, evaluation_mode, dataset, id, sentiment=None):
+    """
+    ES: Envía el texto a la API de Mistral para obtener una clasificación de sentimiento o emoción, junto con una justificación y un nivel de certeza.
+    EN: Sends the text to the Mistral API to obtain a sentiment or emotion classification, along with a justification and a certainty level.
+    Args:        
+    text (str): El texto a analizar.
+        justify (bool): Si se debe incluir una justificación en la respuesta.
+        evaluation_mode (str): El modo de evaluación (sentiment_analysis o emotion_analysis).
+        dataset (str): El nombre del dataset.
+        id (str): El ID del mensaje.
+        sentiment (str): El sentimiento previamente obtenido (solo para análisis de emoción con sentimiento).
+    Returns:
+        Si evaluation_mode es "sentiment_analysis": (sentiment, certainty, justification, processing_date, processing_hour)"
+        Si evaluation_mode es "emotion_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+        Si evaluation_mode es "emotion_with_sentiment_analysis": (emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour)
+    """
     max_retries = 6
     for attempt in range(max_retries):
         try:

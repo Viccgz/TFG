@@ -13,6 +13,20 @@ import chardet
 
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_threads=8):
+    """
+    ES: Procesa un CSV de entrada con mensajes, realiza análisis de sentimiento y emoción utilizando LLMs de forma concurrente, y guarda los resultados en un nuevo CSV y en MongoDB.
+    EN: Processes an input CSV with messages, performs sentiment and emotion analysis using LLMs concurrently, and saves the results to a new CSV and MongoDB.
+    Args:
+        input_csv (str): Ruta al CSV de entrada con los mensajes a analizar.
+        output_csv (str): Ruta al CSV de salida donde se guardarán los resultados.
+        llm_chosen (str): El nombre del LLM a utilizar para el análisis.
+        justification (bool): Si se debe incluir una justificación en el análisis.
+        dataset (str): El nombre del dataset, utilizado para nombrar la colección de MongoDB.
+        num_threads (int): El número de threads a utilizar para el procesamiento concurrente.
+
+    Returns:
+        None
+    """
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo
@@ -99,6 +113,17 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
             return pd.NA
 
     def process_row(index, row, justification):
+        """
+        ES: Procesa una fila del DataFrame, realizando análisis de sentimiento y emoción con LLMs si los campos correspondientes están vacíos o son nulos. Actualiza el DataFrame con los resultados y guarda en MongoDB.
+        EN: Processes a row of the DataFrame, performing sentiment and emotion analysis with LLMs if the corresponding fields are empty or null. Updates the DataFrame with the results and saves to MongoDB.
+
+        Args:
+            index (int): El índice de la fila en el DataFrame.
+            row (pd.Series): La fila del DataFrame a procesar.
+            justification (bool): Si se debe incluir una justificación en el análisis.
+        Returns:
+            None
+        """
         id = row["id"]
         message = row["text"]
         emotion_raw_gt = row["emotion_gt"]
@@ -158,6 +183,15 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
 
 def get_available_datasets(processed_dir="./data/processed"):
+    """
+    ES: Obtiene la lista de conjuntos de datos disponibles en el directorio especificado.
+    EN: Gets the list of available datasets in the specified directory.
+
+    Args:
+        processed_dir (str): El directorio donde se encuentran los CSV procesados.
+    Returns:
+        list of tuples: Una lista de tuplas, donde cada tupla contiene el nombre del dataset (sin extensión) y la ruta al archivo CSV correspondiente.
+    """
     processed_path = Path(processed_dir)
     datasets = []
     if not processed_path.exists():

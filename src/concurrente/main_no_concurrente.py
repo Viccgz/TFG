@@ -14,6 +14,20 @@ def to_string_value(value):
         return str(value)
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):
+    """
+    ES: Procesa un CSV de entrada con mensajes, realiza análisis de sentimiento y emoción utilizando LLMs, y guarda los resultados en un nuevo CSV y en MongoDB.
+    EN: Processes an input CSV with messages, performs sentiment and emotion analysis using LLMs, and saves the results to a new CSV and MongoDB.
+    
+    Args:
+        input_csv (str): Ruta al CSV de entrada con los mensajes a analizar.
+        output_csv (str): Ruta al CSV de salida donde se guardarán los resultados.
+        llm_chosen (str): El nombre del LLM a utilizar para el análisis.
+        justification (bool): Si se debe incluir una justificación en el análisis.
+        dataset (str): El nombre del dataset que se está procesando.
+        
+    Returns:
+        None
+    """
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     MONGO_URI = 'mongodb://localhost:27017'       # ES: Cambiar a la IP del PC con la base de datos si se guarda en otro equipo

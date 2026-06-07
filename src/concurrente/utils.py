@@ -45,6 +45,36 @@ def log_message(msg, llm, dataset, id):
 # ES: Función para guardar en MongoDB el resultado final
 # EN: Function to save the final result in MongoDB
 def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification, processing_date, processing_hour, emotion_mapped_llm, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt, emotion_with_sentiment_raw_llm, emotion_mapped_with_sentiment, certainty_emotion_with_sentiment, justification_emotion_with_sentiment, date_emotion_with_sentiment, time_emotion_with_sentiment):
+    """
+    ES: Guarda en MongoDB el resultado final del análisis de sentimiento y emoción para una muestra, incluyendo el mensaje original, las etiquetas de sentimiento y emoción, la certeza, la justificación, y las fechas y horas de procesamiento. Antes de guardar, procesa la justificación y el mensaje para eliminar caracteres especiales que puedan causar problemas al guardarlos en la base de datos.
+    EN: Saves in MongoDB the final result of the sentiment and emotion analysis for a sample,
+    including the original message, the sentiment and emotion labels, the certainty, the justification, and the processing dates and times. Before saving, it processes the justification and message to remove special characters that may cause issues when saving to the database.
+    Args:
+        collection: La colección de MongoDB donde se guardará el resultado
+        message: El mensaje original que se analizó
+        sentiment: La etiqueta de sentimiento asignada por el LLM
+        certainty: El nivel de certeza asignado por el LLM para la etiqueta de sentimiento
+        justification: La justificación proporcionada por el LLM para la etiqueta de sentimiento
+        processing_date: La fecha en que se procesó la muestra, en formato "YYYY-MM-DD"
+        processing_hour: La hora en que se procesó la muestra, en formato "HH:MM:SS
+        emotion_mapped_llm: La etiqueta de emoción asignada por el LLM, mapeada a las categorías del dataset
+        certainty_emotion: El nivel de certeza asignado por el LLM para la etiqueta de emoción
+        justification_emotion: La justificación proporcionada por el LLM para la etiqueta de emoción
+        date_emotion: La fecha en que se procesó la muestra para el análisis de emoción, en formato "YYYY-MM-DD
+        time_emotion: La hora en que se procesó la muestra para el análisis de emoción, en formato "HH:MM:SS
+        emotion_raw_llm: La etiqueta de emoción sin mapear asignada por el LLM
+        id: El ID de la muestra que se está guardando, para poder rastrear el registro en la base de datos
+        emotion_raw_gt: La etiqueta de emoción sin mapear del ground truth
+        emotion_mapped_gt: La etiqueta de emoción mapeada del ground truth
+        emotion_with_sentiment_raw_llm: La etiqueta de emoción sin mapear asignada por el LLM cuando se le proporciona también la etiqueta de sentimiento
+        emotion_mapped_with_sentiment: La etiqueta de emoción mapeada asignada por el LLM cuando se le proporciona también la etiqueta de sentimiento
+        certainty_emotion_with_sentiment: El nivel de certeza asignado por el LLM para la etiqueta de emoción cuando se le proporciona también la etiqueta de sentimiento
+        justification_emotion_with_sentiment: La justificación proporcionada por el LLM para la etiqueta de emoción cuando se le proporciona también la etiqueta de sentimiento
+        date_emotion_with_sentiment: La fecha en que se procesó la muestra para el análisis de emoción con sentimiento, en formato "YYYY-MM-DD
+        time_emotion_with_sentiment: La hora en que se procesó la muestra para el análisis de emoción con sentimiento, en formato "HH:MM:SS
+    Returns:
+        None. Guarda el resultado en MongoDB. En caso de error, imprime un mensaje de error en la consola.
+    """
 
     #ES: Porcesar la justificacion de la respuesta y cambiar caracteres especiales
     #EN: Process the justification of the response and change special characters
@@ -152,6 +182,20 @@ def parse_response(response, evaluation_mode, dataset, source, id):
         return "unknown", 0.0, "Error parsing response"
     
 def process_response(response, source, evaluation_mode, dataset, id):
+    """
+    ES: Procesa la respuesta del LLM, sanitizándola, parseándola y extrayendo la emoción o sentimiento, la certeza y la justificación. También registra mensajes en el log con cada paso del procesamiento. Si la respuesta no es un JSON válido o no contiene los campos esperados, se registrará un mensaje de error en el log y se devolverán valores por defecto.
+    EN: Processes the LLM response, sanitizing it, parsing it, and extracting the emotion or sentiment, certainty, and justification. It also logs messages at each step of the processing. If the response is not valid JSON or does not contain the expected fields, an error message will be logged and default values will be returned.
+    Args:
+        response: La respuesta del LLM a procesar, que se espera que sea un JSON con los campos "sentiment" o "emotion", "certainty" y "justification
+        source: El nombre del LLM que generó la respuesta, para registrar en el log
+        evaluation_mode: El modo de evaluación, que puede ser "sentiment_analysis" o "emotion_recognition". Esto determina si se espera un campo "sentiment" o "emotion" en la respuesta.
+        dataset: El nombre del dataset que se está procesando, para registrar en el log
+        id: El ID de la muestra que se está procesando, para registrar en el log
+    Returns:
+        Si evaluation_mode es "sentiment_analysis", devuelve una tupla (sentiment, certainty, justification, processing_date, processing_hour) donde sentiment es la etiqueta de sentimiento extraída de la respuesta, certainty es el valor de certeza extraído, justification es la justificación extraída, processing_date es la fecha de procesamiento en formato "YYYY-MM-DD", y processing_hour es la hora de procesamiento en formato "HH:MM:SS".
+        Si evaluation_mode es "emotion_recognition", devuelve una tupla (emotion, certainty, justification, processing_date, processing_hour) donde emotion es la etiqueta de emoción extraída de la respuesta, certainty es el valor de certeza extraído, justification es la justificación extraída, processing_date es la fecha de procesamiento en formato "YYYY-MM-DD", y processing_hour es la hora de procesamiento en formato "HH:MM:SS".
+        En caso de error, devuelve ("unknown", 0.0, "Error parsing response", "NA", "NA") para "sentiment_analysis" o ("unknown", 0.0, "Error parsing response", "NA", "NA") para "emotion_recognition"
+    """
     try:
         if not response.strip():
             log_message("Empty response from llm", source, dataset, id)
