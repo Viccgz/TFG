@@ -8,7 +8,7 @@ src_dir = os.path.dirname(os.path.dirname(current_dir))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-from no_concurrente.utils import sanitize_text
+from trash.no_concurrente.utils import sanitize_text
 
 GO_EMOTIONS_LABELS = [
     "admiration",

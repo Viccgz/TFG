@@ -1,10 +1,10 @@
 import json
 import threading
 import openai
-import utils
+import trash.no_concurrente.utils as utils
 import google.generativeai as genai
 from openai import OpenAI
-from dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS, normalize_emotion_label
+from trash.no_concurrente.dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS, normalize_emotion_label
 from mistralai.client import Mistral
 import time
 

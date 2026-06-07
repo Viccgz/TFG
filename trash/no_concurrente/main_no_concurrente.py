@@ -2,10 +2,10 @@ import os
 import time as timer
 import pandas as pd
 from pymongo import MongoClient
-from dataset_preprocessing.emotion_mapper import normalize_emotion_label
-import sentiment_analysis.llm_call as llm_call
-import utils
-import sentiment_analysis.libraries_call as libraries_call
+from trash.no_concurrente.dataset_preprocessing.emotion_mapper import normalize_emotion_label
+import trash.no_concurrente.sentiment_analysis.llm_call as llm_call
+import trash.no_concurrente.utils as utils
+import trash.no_concurrente.sentiment_analysis.libraries_call as libraries_call
 import chardet
 
 def process_csv(input_csv, output_csv, llm_chosen, justification, dataset):

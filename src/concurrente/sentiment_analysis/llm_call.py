@@ -45,13 +45,13 @@ emotion_prompt = f"From the data provided, you MUST choose ONLY one emotion of t
 emotion_justify_prompt = "Return the result as a JSON object with the following keys: emotion, justification, and certainty. Format example: {\"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty\": \"90%\"}. The text to analyze is: \n "
 emotion_not_justify_prompt = "Return the result as a JSON object with the following keys: emotion and certainty. Format example: {\"emotion\": \"anger\", \"certainty\": \"90%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n"
 
-emotion_and_sentiment_justify_prompt = "The emotion and the sentiment returned are not coherent. Retry again. Return the result as a JSON object with the following keys: sentiment, emotion, justification, and certainty. Format example: {\"sentiment\": \"negative\", \"emotion\": \"anger\", \"justification\": \"The announcement ...\", \"certainty_sentiment\": \"90%\", \"certainty_emotion\": \"80%\"}. The text to analyze is: \n "
-emotion_and_sentiment_not_justify_prompt = "The emotion and the sentiment returned are not coherent. Retry again. Return the result as a JSON object with the following keys: sentiment, emotion, and certainty. Format example: {\"sentiment\": \"negative\", \"emotion\": \"anger\", \"certainty_sentiment\": \"90%\", \"certainty_emotion\": \"80%\"}\n Avoid returning anyyhing else than the json object. The text to analyze is: \n"
+emotion_and_sentiment_justify_prompt = "Taking into account the sentiment retrieved from the previous analysis you must do the following:\n The sentiment was :"
+
 
 
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
-def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
+def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None):
     # ES: Credenciales de la API de ChatGPT
     # EN: ChatGPT API credentials
     openai.api_key = OPEN_AI_KEY_SECRET
@@ -64,7 +64,9 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
                            if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
-                                                                      else (emotion_prompt + emotion_not_justify_prompt + text)) 
+                           else (emotion_prompt + emotion_not_justify_prompt + text)) if evaluation_mode != "emotion_with_sentiment_analysis" 
+                           else ((emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify 
+                           else (emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text))
                     }
                 ],
                 stream=False
@@ -76,7 +78,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
     # EN: Check if the JSON response is not empty
     if not response_json:
         utils.log_message("Null response received.", "chatgpt", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
@@ -87,7 +89,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
         
         # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
         # EN: If it's emotion analysis, map the emotion and return both
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             emotion_raw = sentiment
             emotion_mapped = normalize_emotion_label(emotion_raw)
             return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
@@ -97,12 +99,12 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id):
 
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "chatgpt", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
  
-def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
+def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None):
 
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
@@ -112,7 +114,9 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
                            if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
-                                                                      else (emotion_prompt + emotion_not_justify_prompt + text))
+                           else (emotion_prompt + emotion_not_justify_prompt + text)) if evaluation_mode != "emotion_with_sentiment_analysis" 
+                           else ((emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify 
+                           else (emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text))
                     }
                 ],
                 stream=False
@@ -123,7 +127,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
     # EN: Check if the JSON response is not empty
     if not output:
         utils.log_message("Null response received.", "deepseek", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
@@ -135,7 +139,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
         
         # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
         # EN: If it's emotion analysis, map the emotion and return both
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             emotion_raw = sentiment
             emotion_mapped = normalize_emotion_label(emotion_raw)
             return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
@@ -144,26 +148,28 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id):
     
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "deepseek", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
-def send_to_gemini(text, justify, evaluation_mode, dataset, id):
+def send_to_gemini(text, justify, evaluation_mode, dataset, id, sentiment=None):
     # ES: Generar la respuesta inicial con Gemini
     # EN: Generate the initial response with Gemini
     try:
         if evaluation_mode == "sentiment_analysis":
             prompt = ( sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)
-        else:
+        elif evaluation_mode == "emotion_analysis":
             prompt = ( emotion_prompt + emotion_justify_prompt + text) if justify else (emotion_prompt + emotion_not_justify_prompt + text )
+        elif evaluation_mode == "emotion_with_sentiment_analysis":
+            prompt = ( emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify else ( emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text )
 
         response = modelGemini.generate_content(prompt).text.strip()
         utils.log_message(f"Gemini's raw response:\n{response}", "gemini", dataset, id)
         if not response:
             utils.log_message("Null response received.", "gemini", dataset, id)
-            if evaluation_mode == "emotion_analysis":
+            if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
                 return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
             else:
                 return 'NA', 'NA', 'NA', 'NA', 'NA'
@@ -172,7 +178,7 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
         
         # ES: Si es análisis de emociones, mapear la emoción y devolver ambas
         # EN: If it's emotion analysis, map the emotion and return both
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             emotion_raw = sentiment
             emotion_mapped = normalize_emotion_label(emotion_raw)
             return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
@@ -181,18 +187,18 @@ def send_to_gemini(text, justify, evaluation_mode, dataset, id):
 
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "gemini", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
     except Exception as e:
         utils.log_message(f"Error processing response: {e}", "gemini", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
 
-def send_to_mistral(text, justify, evaluation_mode, dataset, id):
+def send_to_mistral(text, justify, evaluation_mode, dataset, id, sentiment=None):
     max_retries = 6
     for attempt in range(max_retries):
         try:
@@ -202,9 +208,11 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
                     model="mistral-small-latest",
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant"},
-                        {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text))
-                               if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify
-                                                                          else (emotion_prompt + emotion_not_justify_prompt + text))
+                        {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
+                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
+                           else (emotion_prompt + emotion_not_justify_prompt + text)) if evaluation_mode != "emotion_with_sentiment_analysis" 
+                           else ((emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify 
+                           else (emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text))
                         }
                     ]
                 )
@@ -219,7 +227,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
                 time.sleep(wait)
                 if attempt == max_retries - 1:
                     utils.log_message("Max retries alcanzado.", "mistral", dataset, id)
-                    if evaluation_mode == "emotion_analysis":
+                    if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
                         return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
                     else:
                         return 'NA', 'NA', 'NA', 'NA', 'NA'
@@ -229,7 +237,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
 
     if not output:
         utils.log_message("Null response received.", "mistral", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
@@ -237,7 +245,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
         utils.log_message(f"Mistral's raw response:\n{output}", "mistral", dataset, id)
         sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "mistral", evaluation_mode, dataset, id)
 
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             emotion_raw = sentiment
             emotion_mapped = normalize_emotion_label(emotion_raw)
             return emotion_raw, emotion_mapped, certainty, justification, processing_date, processing_hour
@@ -246,7 +254,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id):
 
     except json.JSONDecodeError as e:
         utils.log_message(f"Error decoding JSON: {e}", "mistral", dataset, id)
-        if evaluation_mode == "emotion_analysis":
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
