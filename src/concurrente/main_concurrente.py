@@ -58,7 +58,7 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
                 continue
         if df is None:
             df = pd.read_csv(input_csv, sep=None, engine='python', encoding='utf-8', errors='replace')
-
+    
     string_columns = [
         "sentiment_" + llm_chosen,
         "justification_sentiment_" + llm_chosen,
@@ -133,14 +133,13 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
         # EN:  process if fields are null
         if (pd.isnull(row["sentiment_" + llm_chosen]) or pd.isnull(row["emotion_raw_" + llm_chosen]) or pd.isnull(row["emotion_raw_with_sentiment_" + llm_chosen])
         or row["sentiment_" + llm_chosen] == "NA" or row["emotion_raw_" + llm_chosen] == "NA" or row["emotion_raw_with_sentiment_" + llm_chosen] == "NA"):
+            func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             sentiment, certainty, justification_sentiment, date, time = func(message, justification, "sentiment_analysis", dataset, id)
             
             #ES: Realizar análisis de emociones con LLMs para cada mensaje, y guardar el resultado en el dataframe
             #EN: Perform emotion analysis with LLMs for each message, and save the result
-            func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             emotion_raw_llm, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion = func(message, justification, "emotion_analysis", dataset, id)
             
-            func = llm_call.LLM_FUNCTIONS[llm_chosen.upper()]
             emotion_with_sentiment_raw_llm, emotion_with_sentiment_mapped, certainty_emotion_with_sentiment, justification_emotion_with_sentiment, date_emotion_with_sentiment, time_emotion_with_sentiment = func(message, justification, "emotion_with_sentiment_analysis", dataset, id, sentiment=sentiment)
             # Usar lock para actualizar el DataFrame
             with df_lock:
@@ -169,9 +168,10 @@ def process_csv(input_csv, output_csv, llm_chosen, justification, dataset, num_t
 
             # ES: Guardar en MongoDB (pymongo es thread-safe)
             # EN: Save in MongoDB (pymongo is thread-safe)
-            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt, emotion_with_sentiment_raw_llm, emotion_mapped_with_sentiment, certainty_emotion_with_sentiment, justification_emotion_with_sentiment, date_emotion_with_sentiment, time_emotion_with_sentiment)
+            utils.save_in_mongodb_final_csv(collection, message, sentiment, certainty, justification_sentiment, date, time, emotion_mapped, certainty_emotion, justification_emotion, date_emotion, time_emotion, emotion_raw_llm, id, emotion_raw_gt, emotion_mapped_gt, emotion_with_sentiment_raw_llm, emotion_with_sentiment_mapped, certainty_emotion_with_sentiment, justification_emotion_with_sentiment, date_emotion_with_sentiment, time_emotion_with_sentiment)
 
     # Procesar filas concurrentemente
+    print(f"Please wait, this may take a while... Processing {len(df)} messages with {num_threads} threads.")
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = [executor.submit(process_row, index, row, justification) for index, row in df.iterrows()]
         for future in concurrent.futures.as_completed(futures):
@@ -274,32 +274,36 @@ if __name__ == "__main__":
         df = pd.DataFrame(documents)
 
         output_csv = "./data/results/concurrente/" + llm_chosen + "_"+ dataset + "_results.csv"
-        num_threads = 8  # Sugerido para I/O bound operations como llamadas a LLM
-        print(f"Using {num_threads} threads for concurrent processing.")
+        num_threads = 8  
         llm_start_time = timer.perf_counter()
         process_csv(csv_filename, output_csv, llm_chosen, justification, dataset, num_threads)
         total_llm_time_seconds = round(timer.perf_counter() - llm_start_time, 4)
         print(f"LLM processing time: {total_llm_time_seconds} seconds")
-        # Load the CSV with LLM results
+        # ES: Cargar el CSV con los resultados de LLM
+        # EN: Load the CSV with LLM results
         df = pd.read_csv(output_csv)
         libraries_start_time = timer.perf_counter()
-        # Perform sentiment analysis with libraries
+        # ES: Realizar análisis de sentimiento con librerías
+        # EN: Perform sentiment analysis with libraries
         df = libraries_call.TextBlob_sentiment_analysis(df)
         df = libraries_call.vader_sentiment_analysis(df)
         df = libraries_call.BERT_sentiment_analysis(df)
         
-        # Save sentiment analysis results
+        # ES: Guardar resultados de análisis de sentimiento
+        # EN: Save sentiment analysis results
         sentiment_csv = "./data/results/concurrente/" + llm_chosen + "_"+ dataset + "_sentiment_analysis_results.csv"
         os.makedirs(os.path.dirname(sentiment_csv), exist_ok=True)
         df.to_csv(sentiment_csv, index=False)
         print(f"Sentiment analysis results saved to {sentiment_csv}")
         
-        # Perform emotion analysis with libraries
+        # ES: Realizar análisis de emoción con librerías
+        # EN: Perform emotion analysis with libraries
         df = libraries_call.NRCLex_emotion_analysis(df)
         df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
         df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "GoEmotions")
         
-        # Map raw emotions from each library to normalized emotions using normalize_emotion_label
+        # ES: Mapear emociones crudas de cada librería a emociones normalizadas usando normalize_emotion_label
+        # EN: Map raw emotions from each library to normalized emotions using normalize_emotion_label
         df["emotion_mapped_NRCLex"] = df["emotion_raw_NRCLex"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
         df["emotion_mapped_EmoRoBERTa"] = df["emotion_raw_EmoRoBERTa"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
         df["emotion_mapped_GoEmotions"] = df["emotion_raw_GoEmotions"].apply(lambda x: normalize_emotion_label(x) if pd.notnull(x) else "neutral")
@@ -311,14 +315,17 @@ if __name__ == "__main__":
         # EN: Add timing columns to the dataframe
         df["total_LLM_time_seconds_" + llm_chosen] = total_llm_time_seconds
         df["total_libraries_time_seconds"] = total_libraries_time_seconds
-        # Save emotion analysis results
+
+        # ES: Guardar resultados de análisis de emociones
+        # EN: Save emotion analysis results
         emotion_csv = "./data/results/concurrente/" + llm_chosen + "_"+ dataset + "_sentiment_emotion_analysis_results.csv"
         os.makedirs(os.path.dirname(emotion_csv), exist_ok=True)
         df.to_csv(emotion_csv, index=False)
         print(f"Emotion analysis results saved to {emotion_csv}")
         
         
-        # Reordenar columnas en el orden especificado
+        # ES:Reordenar columnas en el orden deseado
+        # EN:Reorder columns in the desired order
         order_base_columns = ["id", "text",
                     "sentiment_" + llm_chosen, 
                     "certainty_sentiment_" + llm_chosen, 
@@ -350,7 +357,6 @@ if __name__ == "__main__":
  
         df.to_csv(emotion_csv, index=False)
         
-        print(f"Total process time: {total_process_time_seconds} seconds")
         print("All processes completed successfully.")
 
     except Exception as e:
