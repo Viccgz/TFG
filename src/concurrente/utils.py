@@ -107,8 +107,8 @@ def save_in_mongodb_final_csv(collection, message, sentiment, certainty, justifi
                 "emotion_mapped_with_sentiment": emotion_mapped_with_sentiment,
                 "certainty_emotion_with_sentiment": certainty_emotion_with_sentiment,
                 "justification_emotion_with_sentiment": justification_emotion_with_sentiment,
-                "date_emotion_with_sentiment": date_emotion_with_sentiment,
-                "time_emotion_with_sentiment": time_emotion_with_sentiment
+                "processing_date_emotion_with_sentiment": date_emotion_with_sentiment,
+                "processing_hour_emotion_with_sentiment": time_emotion_with_sentiment
             })
     except Exception as e:
         print(f"Error saving to MongoDB: {e}")
