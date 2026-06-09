@@ -73,19 +73,34 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None)
     
     # ES: Generar respuesta inicial de ChatGPT
     # EN: Generate initial ChatGPT response
+    if evaluation_mode == "sentiment_analysis":
+        user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
+        target_key = "sentiment"
+        allowed_labels = ["positive", "negative", "neutral"]
+    elif evaluation_mode == "emotion_with_sentiment_analysis":
+        user_prompt = emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        target_key = "emotion"
+        allowed_labels = goemotions_labels
+    else:
+        user_prompt = emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        target_key = "emotion"
+        allowed_labels = goemotions_labels
+
+    required_keys = [target_key, "certainty"]
+    if justify:
+        required_keys.append("justification")
+        
+    system_instruction = f"You are an expert data classification API. You MUST return a valid JSON object with these exact keys: {required_keys}. For the '{target_key}' key, you are strictly restricted to these values: {allowed_labels}."
+
     response = openai.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-                    {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
-                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
-                           else (emotion_prompt + emotion_not_justify_prompt + text)) if evaluation_mode != "emotion_with_sentiment_analysis" 
-                           else ((emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify 
-                           else (emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text))
-                    }
-                ],
-                stream=False
-    )
+            model="gpt-4.1-mini", 
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            stream=False
+        )
     response_json = response.choices[0].message.content.strip()
     utils.log_message(f"ChatGPT's raw response:\n{response_json}", "chatgpt", dataset, id)
 
@@ -137,19 +152,35 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
     """
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
+    user_couser_promptntent = ""
+    if evaluation_mode == "sentiment_analysis":
+        user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
+        target_key = "sentiment"
+        allowed_labels = ["positive", "negative", "neutral"]
+    elif evaluation_mode == "emotion_with_sentiment_analysis":
+        user_prompt = emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        target_key = "emotion"
+        allowed_labels = goemotions_labels
+    else:
+        user_prompt = emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        target_key = "emotion"
+        allowed_labels = goemotions_labels
+
+    required_keys = [target_key, "certainty"]
+    if justify:
+        required_keys.append("justification")
+        
+    system_instruction = f"You are an expert data classification API. You MUST return a valid JSON object with these exact keys: {required_keys}. For the '{target_key}' key, you are strictly restricted to these values: {allowed_labels}."
+
     response = clientDeepseek.chat.completions.create(
-        model="deepseek-v4-flash",
-        messages=[
-                    {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": ((sentiment_prompt + sentiment_justify_prompt + text) if justify else (sentiment_prompt + sentiment_not_justify_prompt + text)) 
-                           if evaluation_mode == "sentiment_analysis" else ((emotion_prompt + emotion_justify_prompt + text) if justify 
-                           else (emotion_prompt + emotion_not_justify_prompt + text)) if evaluation_mode != "emotion_with_sentiment_analysis" 
-                           else ((emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_justify_prompt + text) if justify 
-                           else (emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + emotion_not_justify_prompt + text))
-                    }
-                ],
-                stream=False
-    )
+            model="deepseek-v4-flash", 
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            stream=False
+        )
     output = response.choices[0].message.content.strip()
     
     # ES: Verifico si la respuesta JSON no está vacía
@@ -181,6 +212,12 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
             return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
         else:
             return 'NA', 'NA', 'NA', 'NA', 'NA'
+    except Exception as e:
+        utils.log_message(f"Error processing response: {e}", "deepseek", dataset, id)
+        if evaluation_mode == "emotion_analysis" or evaluation_mode == "emotion_with_sentiment_analysis":
+            return 'NA', 'NA', 'NA', 'NA', 'NA', 'NA'
+        else:
+                return 'NA', 'NA', 'NA', 'NA', 'NA'
 
 
 def send_to_gemini(text, justify, evaluation_mode, dataset, id, sentiment=None):
