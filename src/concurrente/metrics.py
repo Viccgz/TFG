@@ -9,6 +9,8 @@ try:
 except ImportError:
     plt = None
 
+from dataset_preprocessing.emotion_mapper import GO_EMOTIONS_LABELS
+
 SENTIMENT_LABELS = ["negative", "neutral", "positive"]
 MAPPED_EMOTION_LABELS = ["joy", "sadness", "anger", "fear", "disgust", "surprise", "love", "neutral"]
 
@@ -101,7 +103,7 @@ def evaluate_sentiment(df, pred_column, gt_column="emotion", labels=None):
     return result
 
 
-def evaluate_mapped_emotions(df, pred_column, gt_column="emotion_gt_mapped", labels=None):
+def evaluate_mapped_emotions(df, pred_column, gt_column="emotion_mapped_gt", labels=None):
     """Compute mapped-emotion metrics for the normalized emotion classes."""
     if labels is None:
         labels = MAPPED_EMOTION_LABELS
@@ -122,14 +124,128 @@ def evaluate_fine_grained_emotions(df, pred_column, gt_column, labels=None):
     y_true = clean_series(df[gt_column])
     y_pred = clean_series(df[pred_column])
     if labels is None:
-        labels = sorted(set(y_true.dropna()).union(set(y_pred.dropna())))
+        if set(y_true.dropna()).issubset(GO_EMOTIONS_LABELS):
+            labels = GO_EMOTIONS_LABELS
+        else:
+            labels = sorted(set(y_true.dropna()))
 
-    y_true, y_pred = filter_labels(y_true, y_pred, labels)
+    unknown_true = sorted(set(y_true.dropna()) - set(labels))
+    unknown_pred = sorted(set(y_pred.dropna()) - set(labels))
+
+    valid_mask = y_true.isin(labels) & y_pred.isin(labels)
+    dropped_rows = len(y_true) - int(valid_mask.sum())
+    y_true, y_pred = y_true[valid_mask], y_pred[valid_mask]
+
     metrics = _classification_metrics(y_true, y_pred, labels)
     metrics["task"] = "fine_grained_emotions"
     metrics["pred_column"] = pred_column
     metrics["gt_column"] = gt_column
+    metrics["dropped_rows"] = dropped_rows
+    metrics["unknown_labels"] = {
+        "y_true_unknown": unknown_true,
+        "y_pred_unknown": unknown_pred
+    }
     return metrics
+
+
+def evaluate_llm_misbehaviour_with_sentiment(df, llm_name):
+    """
+    Identify LLM misbehaviours: rows where certainty_emotion_{llm_name} == 0% 
+    but certainty_emotion_with_sentiment_{llm_name} != 0%.
+    
+    For these edge cases, evaluate the sentiment-augmented emotion predictions
+    against ground truth using both fine-grained and mapped emotion labels.
+    
+    Args:
+        df: DataFrame with emotion analysis results
+        llm_name: Name of the LLM (e.g., 'chatgpt', 'mistral', 'deepseek')
+    
+    Returns:
+        dict: Contains:
+            - 'misbehaviour_rows': DataFrame of identified misbehaviours
+            - 'misbehaviour_count': Number of misbehaviours found
+            - 'fine_grained_metrics': Evaluation of emotion_raw_with_sentiment vs emotion_gt
+            - 'mapped_metrics': Evaluation of emotion_mapped_with_sentiment vs emotion_gt_mapped
+            - 'llm_name': The LLM name
+    """
+    # Column names for this LLM
+    certainty_emotion_col = f"certainty_emotion_{llm_name}"
+    certainty_sentiment_col = f"certainty_emotion_with_sentiment_{llm_name}"
+    emotion_raw_sentiment_col = f"emotion_raw_with_sentiment_{llm_name}"
+    emotion_mapped_sentiment_col = f"emotion_mapped_with_sentiment_{llm_name}"
+    
+    # Normalize certainty columns to handle both "0%" and 0 formats
+    def normalize_certainty(val):
+        if pd.isna(val):
+            return np.nan
+        val_str = str(val).strip().replace('%', '')
+        try:
+            return float(val_str)
+        except ValueError:
+            return np.nan
+    
+    df_copy = df.copy()
+    df_copy['_certainty_emotion_norm'] = df_copy[certainty_emotion_col].apply(normalize_certainty)
+    df_copy['_certainty_sentiment_norm'] = df_copy[certainty_sentiment_col].apply(normalize_certainty)
+    
+    misbehaviour_mask = (df_copy['_certainty_emotion_norm'] == 0) & (df_copy['_certainty_sentiment_norm'] != 0)
+    misbehaviour_rows = df[misbehaviour_mask].copy()
+
+    if len(misbehaviour_rows) == 0:
+        return {
+            "llm_name": llm_name,
+            "misbehaviour_count": 0,
+            "misbehaviour_rows": misbehaviour_rows,
+            "fine_grained_metrics": None,
+            "mapped_metrics": None,
+            "note": "No misbehaviours found with the specified criteria"
+        }
+    
+    # Evaluate fine-grained emotions (raw with sentiment vs ground truth raw)
+    fine_grained_result = evaluate_fine_grained_emotions(
+        misbehaviour_rows, 
+        pred_column=emotion_raw_sentiment_col,
+        gt_column="emotion_raw_gt"
+    )
+    
+    # Evaluate mapped emotions (mapped with sentiment vs ground truth mapped)
+    mapped_result = evaluate_mapped_emotions(
+        misbehaviour_rows,
+        pred_column=emotion_mapped_sentiment_col,
+        gt_column="emotion_mapped_gt"
+    )
+    
+    return {
+        "llm_name": llm_name,
+        "misbehaviour_count": len(misbehaviour_rows),
+        "misbehaviour_rows": misbehaviour_rows,
+        "fine_grained_metrics": fine_grained_result,
+        "mapped_metrics": mapped_result
+    }
+
+
+def print_misbehaviour_analysis(result):
+    """Pretty-print LLM misbehaviour analysis results."""
+    print(f"\n{'='*60}")
+    print(f"LLM Misbehaviour Analysis: {result['llm_name'].upper()}")
+    print(f"{'='*60}")
+    print(f"Misbehaviour count: {result['misbehaviour_count']}")
+    
+    if result['misbehaviour_count'] == 0:
+        print(result.get('note', 'No misbehaviours found.'))
+        return
+    
+    print(f"\n{'-'*60}")
+    print("FINE-GRAINED EMOTIONS (raw_with_sentiment vs emotion_gt)")
+    print(f"{'-'*60}")
+    if result['fine_grained_metrics']:
+        print_metrics(result['fine_grained_metrics'])
+    
+    print(f"\n{'-'*60}")
+    print("MAPPED EMOTIONS (mapped_with_sentiment vs emotion_gt_mapped)")
+    print(f"{'-'*60}")
+    if result['mapped_metrics']:
+        print_metrics(result['mapped_metrics'])
 
 
 def ensure_plot_backend():
@@ -142,13 +258,17 @@ def ensure_plot_backend():
 def plot_per_class_metrics(result, prefix, show=False):
     ensure_plot_backend()
     df = result["per_class"]
-    fig, ax = plt.subplots(figsize=(10, 6))
+    num_classes = len(df.index)
+    fig_width = max(10, min(20, num_classes * 0.7))
+    fig, ax = plt.subplots(figsize=(fig_width, 6))
     df.plot(kind="bar", ax=ax)
     ax.set_title(f"Per-class metrics for {result.get('task')}")
     ax.set_xlabel("Class")
     ax.set_ylabel("Score")
     ax.set_ylim(0, 1)
     ax.legend(title="Metric")
+    ax.set_xticklabels(df.index, rotation=45, ha="right")
+    ax.tick_params(axis="x", which="major", labelsize=9)
     fig.tight_layout()
     filename = f"{prefix}_per_class.png"
     fig.savefig(filename, bbox_inches="tight")
@@ -228,6 +348,8 @@ def print_metrics(result):
     print(f"Accuracy: {result.get('accuracy'):.4f}")
     print(f"Macro F1: {result.get('macro_f1'):.4f}")
     print(f"Weighted F1: {result.get('weighted_f1'):.4f}")
+    if result.get("dropped_rows") is not None:
+        print(f"Dropped rows (missing or out-of-vocab labels): {result.get('dropped_rows')}")
     print("\nPer-class metrics:")
     print(result.get("per_class"))
     print("\nConfusion matrix:")
@@ -245,7 +367,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-prefix", default="metrics", help="Prefix for saved plot files")
     parser.add_argument("--show", action="store_true", help="Display the generated plots interactively after saving them")
     args = parser.parse_args()
-
+    
     if args.sep:
         df = pd.read_csv(args.csv, sep=args.sep)
     else:
@@ -253,7 +375,7 @@ if __name__ == "__main__":
             df = pd.read_csv(args.csv)
         except pd.errors.ParserError:
             df = pd.read_csv(args.csv, sep=';')
-
+    
     if args.task == "sentiment":
         result = evaluate_sentiment(df, args.pred, args.gt)
     elif args.task == "mapped_emotions":
