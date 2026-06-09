@@ -48,7 +48,17 @@ emotion_not_justify_prompt = "Return the result as a JSON object with the follow
 emotion_and_sentiment_justify_prompt = "Taking into account the sentiment retrieved from the previous analysis you must do the following:\n The sentiment was :"
 
 
+# ES: Pompts analisis de sentimiento opeanai tras el cambio en la estructura de la llamada 
+openai_sentiment_prompt = "Classify the sentiment of the provided text.\n"
+openai_sentiment_justify_prompt = "Provide a justification and certainty percentage. The text to analyze is:\n"
+openai_sentiment_not_justify_prompt = "Provide the certainty percentage. The text to analyze is:\n"
 
+# ES: Pompts analisis de emociones opeanai tras el cambio en la estructura de la llamada
+openai_emotion_prompt = "Classify the primary emotion of the provided text.\n"
+openai_emotion_justify_prompt = "Provide a justification and certainty percentage. The text to analyze is:\n"
+openai_emotion_not_justify_prompt = "Provide the certainty percentage. The text to analyze is:\n"
+
+openai_emotion_and_sentiment_justify_prompt = "Taking into account the sentiment retrieved from the previous analysis you must do the following:\n The sentiment was: "
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
 def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None):
@@ -75,15 +85,15 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None)
     # EN: Generate initial ChatGPT response
     user_prompt = ""
     if evaluation_mode == "sentiment_analysis":
-        user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
+        user_prompt = openai_sentiment_prompt + (openai_sentiment_justify_prompt if justify else openai_sentiment_not_justify_prompt) + text
         target_key = "sentiment"
         allowed_labels = ["positive", "negative", "neutral"]
     elif evaluation_mode == "emotion_with_sentiment_analysis":
-        user_prompt = emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        user_prompt = openai_emotion_and_sentiment_justify_prompt + sentiment + "\n" + openai_emotion_prompt + (openai_emotion_justify_prompt if justify else openai_emotion_not_justify_prompt) + text
         target_key = "emotion"
         allowed_labels = goemotions_labels
     else:
-        user_prompt = emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        user_prompt = openai_emotion_prompt + (openai_emotion_justify_prompt if justify else openai_emotion_not_justify_prompt) + text
         target_key = "emotion"
         allowed_labels = goemotions_labels
 
@@ -155,15 +165,15 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
     # EN: Generate the initial response with Deepseek
     user_prompt = ""
     if evaluation_mode == "sentiment_analysis":
-        user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
+        user_prompt = openai_sentiment_prompt + (openai_sentiment_justify_prompt if justify else openai_sentiment_not_justify_prompt) + text
         target_key = "sentiment"
         allowed_labels = ["positive", "negative", "neutral"]
     elif evaluation_mode == "emotion_with_sentiment_analysis":
-        user_prompt = emotion_and_sentiment_justify_prompt + sentiment + "\n" + emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        user_prompt = openai_emotion_and_sentiment_justify_prompt + sentiment + "\n" + openai_emotion_prompt + (openai_emotion_justify_prompt if justify else openai_emotion_not_justify_prompt) + text
         target_key = "emotion"
         allowed_labels = goemotions_labels
     else:
-        user_prompt = emotion_prompt + (emotion_justify_prompt if justify else emotion_not_justify_prompt) + text
+        user_prompt = openai_emotion_prompt + (openai_emotion_justify_prompt if justify else openai_emotion_not_justify_prompt) + text
         target_key = "emotion"
         allowed_labels = goemotions_labels
 
@@ -373,7 +383,7 @@ LLM_FUNCTIONS = {
     'CHATGPT': send_to_chatgpt,
     'GEMINI': send_to_gemini,
     'DEEPSEEK': send_to_deepseek,
-    'MISTRAL': send_to_mistral  # Placeholder para Mistral, implementar send_to_mistral y asignar aquí
+    'MISTRAL': send_to_mistral 
 }
 
 # ES: Lista de LLMs disponibles
