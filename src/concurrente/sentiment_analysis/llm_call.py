@@ -73,6 +73,7 @@ def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None)
     
     # ES: Generar respuesta inicial de ChatGPT
     # EN: Generate initial ChatGPT response
+    user_prompt = ""
     if evaluation_mode == "sentiment_analysis":
         user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
         target_key = "sentiment"
@@ -152,7 +153,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
     """
     # ES: Generar la respuesta inicial con Deepseek
     # EN: Generate the initial response with Deepseek
-    user_couser_promptntent = ""
+    user_prompt = ""
     if evaluation_mode == "sentiment_analysis":
         user_prompt = sentiment_prompt + (sentiment_justify_prompt if justify else sentiment_not_justify_prompt) + text
         target_key = "sentiment"
@@ -313,7 +314,7 @@ def send_to_mistral(text, justify, evaluation_mode, dataset, id, sentiment=None)
                     ]
                 )
             output = response.choices[0].message.content.strip()
-            break  # éxito, salir del loop
+            break  
 
         except Exception as e:
             retryable_errors = ["429", "rate_limited", "500", "502", "503", "504", "timeout", "timed out", "ReadTimeout", "Service unavailable", "ConnectTimeout"]
