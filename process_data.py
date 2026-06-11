@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-
+import time as timer
 from src.concurrente.dataset_preprocessing.emotion_mapper import normalize_emotion_label
 from src.concurrente.sentiment_analysis import libraries_call
 
@@ -17,7 +17,7 @@ sentiment_csv = "./data/results/concurrente/" + "deepseek" + "_"+ "isear" + "_se
 os.makedirs(os.path.dirname(sentiment_csv), exist_ok=True)
 df.to_csv(sentiment_csv, index=False)
 print(f"Sentiment analysis results saved to {sentiment_csv}")
-    
+libraries_start_time = timer.perf_counter()
 # Perform emotion analysis with libraries
 df = libraries_call.NRCLex_emotion_analysis(df)
 df = libraries_call.GoEmotions_EmoRoBERTa_emotion_analysis(df, "EmoRoBERTa")
@@ -57,5 +57,6 @@ final_cols = [col for col in final_cols if col in df.columns]
 df = df[final_cols]
     
 df.to_csv("deepseek_isear_sentiment_emotion_analysis_results.csv", index=False)
-
+total_libraries_time_seconds = round(timer.perf_counter() - libraries_start_time, 4)
+print(f"Libraries processing time: {total_libraries_time_seconds} seconds")
 print("All processes completed successfully.")
