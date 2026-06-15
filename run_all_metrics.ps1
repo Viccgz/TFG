@@ -102,6 +102,12 @@ python src/concurrente/metrics.py --csv data/results/concurrente/isear_final_res
 Write-Host "  - Gemini Mapped emotions" -ForegroundColor Gray
 python src/concurrente/metrics.py --csv data/results/concurrente/isear_final_results.csv --pred emotion_mapped_gemini --gt emotion_mapped_gt --task mapped_emotions --output-dir data/results/metrics/isear/gemini_results_emotion --output-prefix gemini_emotion_mapped
 
+Write-Host "  - Mistral Fine-grained emotions" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/isear_final_results.csv --pred emotion_raw_mistral --gt emotion_raw_gt --task fine_grained_emotions --output-dir data/results/metrics/isear/mistral_results_emotion --output-prefix mistral_emotion
+
+Write-Host "  - Mistral Mapped emotions" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/isear_final_results.csv --pred emotion_mapped_mistral --gt emotion_mapped_gt --task mapped_emotions --output-dir data/results/metrics/isear/mistral_results_emotion --output-prefix mistral_emotion_mapped
+
 Write-Host "  - Mistral Fine-grained emotions with sentiment" -ForegroundColor Gray
 python src/concurrente/metrics.py --csv data/results/concurrente/isear_final_results.csv --pred emotion_raw_with_sentiment_mistral --gt emotion_raw_gt --task fine_grained_emotions --output-dir data/results/metrics/isear/mistral_results_emotion_with_sentiment --output-prefix mistral_emotion_with_sentiment
 
@@ -174,6 +180,18 @@ python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_re
 
 Write-Host "  - DeepSeek Mapped emotions with sentiment" -ForegroundColor Gray
 python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_results.csv --pred emotion_mapped_with_sentiment_deepseek --gt emotion_mapped_gt --task mapped_emotions --output-dir data/results/metrics/kaggle/deepseek_results_emotion_with_sentiment --output-prefix deepseek_emotion_mapped_with_sentiment
+
+Write-Host "  - Mistral Fine-grained emotions" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_results.csv --pred emotion_raw_mistral --gt emotion_raw_gt --task fine_grained_emotions --output-dir data/results/metrics/kaggle/mistral_results_emotion --output-prefix mistral_emotion
+
+Write-Host "  - Mistral Mapped emotions" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_results.csv --pred emotion_mapped_mistral --gt emotion_mapped_gt --task mapped_emotions --output-dir data/results/metrics/kaggle/mistral_results_emotion --output-prefix mistral_emotion_mapped
+
+Write-Host "  - Mistral Fine-grained emotions with sentiment" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_results.csv --pred emotion_raw_with_sentiment_mistral --gt emotion_raw_gt --task fine_grained_emotions --output-dir data/results/metrics/kaggle/mistral_results_emotion_with_sentiment --output-prefix mistral_emotion_with_sentiment
+
+Write-Host "  - Mistral Mapped emotions with sentiment" -ForegroundColor Gray
+python src/concurrente/metrics.py --csv data/results/concurrente/kaggle_final_results.csv --pred emotion_mapped_with_sentiment_mistral --gt emotion_mapped_gt --task mapped_emotions --output-dir data/results/metrics/kaggle/mistral_results_emotion_with_sentiment --output-prefix mistral_emotion_mapped_with_sentiment
 
 Write-Host "[KAGGLE] ¡Completado!" -ForegroundColor Green
 

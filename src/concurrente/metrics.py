@@ -281,7 +281,12 @@ def plot_confusion_matrix(result, prefix, show=False):
     ensure_plot_backend()
     cm = result["confusion_matrix"]
     labels = list(cm.index)
-    fig, ax = plt.subplots(figsize=(10, 8))
+    num_labels = len(labels)
+    # Dynamically adjust figure size based on number of labels
+    # Minimum width of 12, add 0.4 inches per label
+    fig_width = max(12, num_labels * 0.5)
+    fig_height = max(10, num_labels * 0.4)
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     cax = ax.imshow(cm.values, interpolation="nearest", cmap="Blues")
     ax.set_title(f"Confusion matrix for {result.get('task')}")
     fig.colorbar(cax, ax=ax)
