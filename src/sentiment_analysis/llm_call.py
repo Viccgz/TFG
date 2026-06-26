@@ -205,7 +205,7 @@ def send_to_deepseek(text, justify, evaluation_mode, dataset, id, sentiment=None
             return 'NA', 'NA', 'NA', 'NA', 'NA'
     try:
         # ES: Procesar la respuesta de Deepseek        
-        # # EN: Process the Deepseek response
+        # EN: Process the Deepseek response
         utils.log_message(f"Deepseek's raw response:\n{output}", "deepseek", dataset, id)
         sentiment, certainty, justification, processing_date, processing_hour = utils.process_response(output, "deepseek", evaluation_mode, dataset, id)
         
