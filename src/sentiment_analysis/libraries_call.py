@@ -12,13 +12,13 @@ import csv
 from nrclex import NRCLex
 
 def TextBlob_sentiment_analysis(df):
-    # Function to analyze sentiment and return polarity and subjectivity
     def analyze_sentiment(text):
         analysis = TextBlob(text)
         polarity = analysis.sentiment.polarity
         subjectivity = analysis.sentiment.subjectivity
         
-        # Classify sentiment as positive, negative or neutral
+        # ES: Clasifica el sentimiento como positivo, negativo o neutral
+        # EN: Classify sentiment as positive, negative or neutral
         if polarity > 0:
             sentiment = '+'
         elif polarity < 0:
@@ -27,8 +27,9 @@ def TextBlob_sentiment_analysis(df):
             sentiment = '='
         
         return sentiment, polarity, subjectivity
-
-    # Apply sentiment analysis to the text column
+    
+    # ES: Aplica el análisis de sentimiento a la columna de texto
+    # EN: Apply sentiment analysis to the text column
     df[['sentiment_TextBlob', 'polarity_TextBlob', 'subjectivity_TextBlob']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
@@ -36,22 +37,23 @@ def TextBlob_sentiment_analysis(df):
     return df
 
 def vader_sentiment_analysis(df):
-    # Download VADER lexicon
     nltk.download('vader_lexicon')
 
-    # Initialize the VADER sentiment intensity analyzer
+    # ES: Inicializa el analizador de intensidad de sentimiento VADER
+    # EN: Initialize the VADER sentiment intensity analyzer
     sia = SentimentIntensityAnalyzer()
 
-    # Function to analyze sentiment
     def analyze_sentiment(text):
         sentiment_scores = sia.polarity_scores(text)
-        # Use the compound score as a measure of polarity
+        # ES: Usa la puntuación compuesta como medida de polaridad
+        # EN: Use the compound score as a measure of polarity
         polarity = sentiment_scores['compound']
         pos = sentiment_scores['pos']
         neg = sentiment_scores['neg']
         neu = sentiment_scores['neu']
         
-        # Classify sentiment based on compound score
+        # ES: Clasifica el sentimiento basado en la puntuación compuesta
+        # EN: Classify sentiment based on compound score
         if polarity >= 0.05:
             sentiment = '+'
         elif polarity <= -0.05:
@@ -61,7 +63,8 @@ def vader_sentiment_analysis(df):
         
         return sentiment, polarity, pos, neg, neu
 
-    # Apply sentiment analysis to the text column
+    # ES: Aplica el análisis de sentimiento a la columna de texto
+    # EN: Apply sentiment analysis to the text column
     df[['sentiment_VADER', 'compound_VADER', 'pos_VADER', 'neg_VADER', 'neu_VADER']] = df['text'].apply(
         lambda x: pd.Series(analyze_sentiment(x))
     )
@@ -69,7 +72,6 @@ def vader_sentiment_analysis(df):
     return df
 
 def BERT_sentiment_analysis(df):
-    # Preprocesamiento del texto
     def preprocess(text):
         new_text = []
         for t in str(text).split(" "):
@@ -78,13 +80,15 @@ def BERT_sentiment_analysis(df):
             new_text.append(t)
         return " ".join(new_text)
 
-    # Cargar modelo y tokenizer
+    # ES: Cargar modelo y tokenizer
+    # EN: Load model and tokenizer
     task = 'sentiment'
     MODEL = f"cardiffnlp/twitter-roberta-base-{task}"
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL)
 
-    # Descargar etiquetas (labels)
+    # ES: Descargar etiquetas (labels)
+    # EN: Download labels
     labels = []
     mapping_link = f"https://raw.githubusercontent.com/cardiffnlp/tweeteval/main/datasets/{task}/mapping.txt"
     with urllib.request.urlopen(mapping_link) as f:
@@ -92,7 +96,8 @@ def BERT_sentiment_analysis(df):
         csvreader = csv.reader(html, delimiter='\t')
         labels = [row[1] for row in csvreader if len(row) > 1]
 
-    # Clasificar cada mensaje
+    # ES: Clasificar cada mensaje
+    # EN: Classify each message
     results = []
 
     for text in df["text"]:
@@ -119,7 +124,8 @@ def BERT_sentiment_analysis(df):
 
         results.append(label)
 
-    # Añadir columna de sentimiento
+    # ES: Añadir columna de sentimiento
+    # EN: Add sentiment column
     df["sentiment_BERT"] = results
 
     return df
@@ -127,7 +133,8 @@ def BERT_sentiment_analysis(df):
 def NRCLex_emotion_analysis(df):
     
     def analyze_emotion(text):
-        # Guard clause: skip non-string/NaN rows
+        # ES: Guard clause: omitir filas que no sean string o NaN
+        # EN: Guard clause: skip non-string/NaN rows
         if not isinstance(text, str):
             return 'neutral'
             
@@ -136,7 +143,8 @@ def NRCLex_emotion_analysis(df):
         top_emotions = emotion.top_emotions
         
         if top_emotions:
-            return top_emotions[0][0]  # Primary emotion
+            return top_emotions[0][0]  # ES: Emoción principal
+                                       # EN: Primary emotion
         else:
             return 'neutral'
     try:

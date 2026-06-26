@@ -59,6 +59,7 @@ openai_emotion_justify_prompt = "Provide a justification and certainty percentag
 openai_emotion_not_justify_prompt = "Provide the certainty percentage. The text to analyze is:\n"
 
 openai_emotion_and_sentiment_justify_prompt = "Taking into account the sentiment retrieved from the previous analysis you must do the following:\n The sentiment was: "
+
 # ES: Función para enviar los tweets a la API de OpenAI para generar una respuesta positiva o negativa
 # EN: Function to send tweets to OpenAI API to generate a positive or negative response
 def send_to_chatgpt(text, justify, evaluation_mode, dataset, id, sentiment=None):
