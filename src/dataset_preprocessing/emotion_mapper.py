@@ -8,8 +8,8 @@ src_dir = os.path.dirname(os.path.dirname(current_dir))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-from concurrente.utils import sanitize_text
-from concurrente.dataset_preprocessing.data_loader import download_datasets
+from utils import sanitize_text
+from dataset_preprocessing.data_loader import download_datasets
 
 GO_EMOTIONS_LABELS = [
     "admiration",
